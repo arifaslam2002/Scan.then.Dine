@@ -167,7 +167,10 @@ const Menu = () => {
                 Table T-05
               </div>
 
-              <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#171717] text-white shadow-lg">
+              <button
+                onClick={() => navigate("/cart")}
+                className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#171717] text-white shadow-lg"
+              >
                 <ShoppingBag size={19} />
 
                 {cartCount > 0 && (
@@ -372,7 +375,10 @@ const Menu = () => {
       {/* Floating cart */}
       {cartCount > 0 && (
         <div className="fixed bottom-5 left-5 right-5 z-40 sm:left-auto sm:right-8 sm:w-96">
-          <button className="flex w-full items-center justify-between rounded-2xl bg-[#171717] px-5 py-4 text-white shadow-2xl">
+          <button
+            onClick={() => navigate("/cart")}
+            className="flex w-full items-center justify-between rounded-2xl bg-[#171717] px-5 py-4 text-white shadow-2xl"
+          >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
                 <ShoppingBag size={18} />
