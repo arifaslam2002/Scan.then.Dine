@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -84,7 +85,6 @@ const foods = [
     ingredients: ["milk", "chocolate", "sugar"],
   },
 ];
-
 const categories = ["All", "Grills", "Burgers", "Rice", "Curries", "Drinks"];
 
 const allergyMap = {
@@ -99,6 +99,7 @@ const allergyMap = {
   sesame: ["sesame"],
 };
 const Menu = () => {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
@@ -274,6 +275,7 @@ const Menu = () => {
                 .map((food) => (
                   <div
                     key={food.id}
+                    onClick={() => navigate(`/food/${food.id}`)}
                     className="min-w-[270px] overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm"
                   >
                     <div className="relative">
@@ -311,7 +313,10 @@ const Menu = () => {
                         <span className="font-bold">₹{food.price}</span>
 
                         <button
-                          onClick={() => addToCart(food)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(food);
+                          }}
                           className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-white transition hover:bg-orange-600"
                         >
                           <Plus size={18} />

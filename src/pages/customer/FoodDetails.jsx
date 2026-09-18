@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -24,12 +24,7 @@ const foods = [
       "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=1200&q=80",
     description:
       "Juicy charcoal-grilled chicken marinated with aromatic spices, garlic and fresh lemon. Served hot with a smoky grilled flavor.",
-    ingredients: [
-      "Chicken",
-      "Spices",
-      "Garlic",
-      "Lemon",
-    ],
+    ingredients: ["Chicken", "Spices", "Garlic", "Lemon"],
   },
   {
     id: 2,
@@ -43,14 +38,7 @@ const foods = [
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80",
     description:
       "Crispy chicken fillet layered with fresh lettuce, cheese and our signature sauce inside a soft toasted bun.",
-    ingredients: [
-      "Chicken",
-      "Wheat",
-      "Egg",
-      "Milk",
-      "Cheese",
-      "Lettuce",
-    ],
+    ingredients: ["Chicken", "Wheat", "Egg", "Milk", "Cheese", "Lettuce"],
   },
   {
     id: 3,
@@ -64,13 +52,7 @@ const foods = [
       "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=1200&q=80",
     description:
       "Fragrant rice wok-tossed with tender chicken, vegetables, egg and a flavorful soy-based seasoning.",
-    ingredients: [
-      "Rice",
-      "Chicken",
-      "Egg",
-      "Soy",
-      "Vegetables",
-    ],
+    ingredients: ["Rice", "Chicken", "Egg", "Soy", "Vegetables"],
   },
   {
     id: 4,
@@ -84,12 +66,7 @@ const foods = [
       "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=1200&q=80",
     description:
       "Classic tandoori chicken marinated in yogurt and aromatic spices, then roasted for a delicious smoky finish.",
-    ingredients: [
-      "Chicken",
-      "Yogurt",
-      "Spices",
-      "Lemon",
-    ],
+    ingredients: ["Chicken", "Yogurt", "Spices", "Lemon"],
   },
   {
     id: 5,
@@ -103,13 +80,7 @@ const foods = [
       "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=1200&q=80",
     description:
       "Soft paneer cooked in a rich tomato and butter gravy with aromatic Indian spices.",
-    ingredients: [
-      "Paneer",
-      "Milk",
-      "Butter",
-      "Tomato",
-      "Cashew",
-    ],
+    ingredients: ["Paneer", "Milk", "Butter", "Tomato", "Cashew"],
   },
   {
     id: 6,
@@ -123,39 +94,17 @@ const foods = [
       "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=1200&q=80",
     description:
       "Creamy chocolate milkshake blended with rich chocolate and chilled milk.",
-    ingredients: [
-      "Milk",
-      "Chocolate",
-      "Sugar",
-    ],
+    ingredients: ["Milk", "Chocolate", "Sugar"],
   },
 ];
 
 const allergyMap = {
   peanuts: ["peanut", "peanuts"],
-  "tree-nuts": [
-    "almond",
-    "cashew",
-    "pistachio",
-    "walnut",
-    "nuts",
-  ],
-  dairy: [
-    "milk",
-    "cheese",
-    "butter",
-    "cream",
-    "yogurt",
-    "paneer",
-  ],
+  "tree-nuts": ["almond", "cashew", "pistachio", "walnut", "nuts"],
+  dairy: ["milk", "cheese", "butter", "cream", "yogurt", "paneer"],
   egg: ["egg"],
   fish: ["fish"],
-  shellfish: [
-    "shellfish",
-    "shrimp",
-    "prawn",
-    "crab",
-  ],
+  shellfish: ["shellfish", "shrimp", "prawn", "crab"],
   soy: ["soy", "soya"],
   gluten: ["wheat", "flour", "bread"],
   sesame: ["sesame"],
@@ -166,30 +115,54 @@ const FoodDetails = () => {
   const navigate = useNavigate();
 
   const [quantity, setQuantity] = useState(1);
-
-  const food = foods.find(
-    (item) => item.id === Number(id)
-  );
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviews, setReviews] = useState([
+    {
+      id: 1,
+      userName: "Arif",
+      rating: 5,
+      comment: "Really tasty and fresh!",
+      date: "Sep 18, 2026",
+    },
+    {
+      id: 2,
+      userName: "Abid",
+      rating: 4,
+      comment: "Really tasty and fresh!",
+      date: "Sep 16, 2026",
+    },
+    {
+      id: 3,
+      userName: "Ram",
+      rating: 3,
+      comment: "Really tasty and fresh!",
+      date: "Sep 15, 2026",
+    },
+  ]);
+  const food = foods.find((item) => item.id === Number(id));
 
   const allergies = useMemo(() => {
     try {
-      return (
-        JSON.parse(
-          localStorage.getItem("customerAllergies")
-        ) || []
-      );
+      return JSON.parse(localStorage.getItem("customerAllergies")) || [];
     } catch {
       return [];
     }
   }, []);
+  useEffect(() => {
+    const savedReviews = localStorage.getItem(`reviews-${id}`);
 
+    if (savedReviews) {
+      setReviews(JSON.parse(savedReviews));
+    }
+  }, [id]);
   if (!food) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f7f5]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">
-            Food not found
-          </h1>
+          <h1 className="text-2xl font-bold">Food not found</h1>
 
           <button
             onClick={() => navigate("/menu")}
@@ -203,14 +176,11 @@ const FoodDetails = () => {
   }
 
   const restrictedIngredients = allergies.flatMap(
-    (allergy) => allergyMap[allergy] || []
+    (allergy) => allergyMap[allergy] || [],
   );
 
-  const matchedAllergens = food.ingredients.filter(
-    (ingredient) =>
-      restrictedIngredients.includes(
-        ingredient.toLowerCase()
-      )
+  const matchedAllergens = food.ingredients.filter((ingredient) =>
+    restrictedIngredients.includes(ingredient.toLowerCase()),
   );
 
   const isUnsafe = matchedAllergens.length > 0;
@@ -218,13 +188,9 @@ const FoodDetails = () => {
   const total = food.price * quantity;
 
   const addToCart = () => {
-    const existingCart = JSON.parse(
-      localStorage.getItem("cart") || "[]"
-    );
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-    const existingItem = existingCart.find(
-      (item) => item.id === food.id
-    );
+    const existingItem = existingCart.find((item) => item.id === food.id);
 
     let updatedCart;
 
@@ -235,7 +201,7 @@ const FoodDetails = () => {
               ...item,
               quantity: item.quantity + quantity,
             }
-          : item
+          : item,
       );
     } else {
       updatedCart = [
@@ -247,21 +213,57 @@ const FoodDetails = () => {
       ];
     }
 
-    localStorage.setItem(
-      "cart",
-      JSON.stringify(updatedCart)
-    );
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
 
     navigate("/menu");
   };
 
+  const handleSubmitReview = () => {
+    if (!reviewName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    if (reviewRating === 0) {
+      alert("Please select a rating");
+      return;
+    }
+    if (!reviewComment.trim()) {
+      alert("Please write a comment");
+      return;
+    }
+    const newReview = {
+      id: Date.now(),
+      userName: reviewName,
+      rating: reviewRating,
+      comment: reviewComment,
+      date: new Date().toLocaleDateString(),
+    };
+    setReviews((prevReviews) => {
+      const updatedReviews = [newReview, ...prevReviews];
+
+      localStorage.setItem(`reviews-${id}`, JSON.stringify(updatedReviews));
+
+      return updatedReviews;
+    });
+
+    setReviewName("");
+    setReviewRating(0);
+    setReviewComment("");
+    setShowReviewForm(false);
+  };
+const averageRating =
+  reviews.length > 0
+    ? (
+        reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviews.length
+      ).toFixed(1)
+    : "0.0";
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
-
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f7f7f5]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-
           <button
             onClick={() => navigate("/menu")}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/5 bg-white text-gray-600 transition hover:bg-gray-50"
@@ -280,17 +282,13 @@ const FoodDetails = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white">
             <ShoppingBag size={18} />
           </div>
-
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-5 pb-32 pt-6 sm:px-8">
-
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-
           {/* Image */}
           <div className="relative overflow-hidden rounded-[2rem] bg-white p-2 shadow-sm">
-
             <img
               src={food.image}
               alt={food.name}
@@ -300,59 +298,42 @@ const FoodDetails = () => {
             {/* Popular badge */}
             {food.ordered >= 200 && (
               <div className="absolute left-6 top-6 flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold shadow-lg backdrop-blur">
-                <Flame
-                  size={14}
-                  className="text-orange-500"
-                />
+                <Flame size={14} className="text-orange-500" />
                 Most Ordered
               </div>
             )}
-
           </div>
 
           {/* Details */}
           <div className="pt-2">
-
             {/* Category */}
             <p className="text-sm font-semibold text-orange-500">
               {food.category}
             </p>
 
             <div className="mt-2 flex items-start justify-between gap-5">
-
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
                 {food.name}
               </h1>
 
-              <span className="shrink-0 text-xl font-bold">
-                ₹{food.price}
-              </span>
-
+              <span className="shrink-0 text-xl font-bold">₹{food.price}</span>
             </div>
 
             {/* Rating */}
             <div className="mt-5 flex flex-wrap items-center gap-3">
-
               <div className="flex items-center gap-1 rounded-full bg-yellow-50 px-3 py-1.5 text-sm font-bold text-yellow-700">
-                <Star
-                  size={15}
-                  fill="currentColor"
-                />
-                {food.rating}
+                <Star size={15} fill="currentColor" />
+                {averageRating}
               </div>
 
               <span className="text-sm text-gray-400">
-                {food.reviews} reviews
+                {reviews.length} reviews
               </span>
 
               <span className="flex items-center gap-1 text-sm text-gray-400">
-                <Flame
-                  size={15}
-                  className="text-orange-500"
-                />
+                <Flame size={15} className="text-orange-500" />
                 {food.ordered} ordered
               </span>
-
             </div>
 
             {/* Description */}
@@ -362,46 +343,31 @@ const FoodDetails = () => {
 
             {/* Ingredients */}
             <div className="mt-8">
-
-              <h2 className="text-sm font-bold">
-                Ingredients
-              </h2>
+              <h2 className="text-sm font-bold">Ingredients</h2>
 
               <div className="mt-3 flex flex-wrap gap-2">
-
                 {food.ingredients.map((ingredient) => (
                   <span
                     key={ingredient}
                     className={`rounded-full px-3 py-2 text-xs font-medium ${
-                      matchedAllergens.includes(
-                        ingredient
-                      )
+                      matchedAllergens.includes(ingredient)
                         ? "bg-red-50 text-red-600 ring-1 ring-red-200"
                         : "bg-white text-gray-600 ring-1 ring-black/5"
                     }`}
                   >
                     {ingredient}
 
-                    {matchedAllergens.includes(
-                      ingredient
-                    ) && " ⚠️"}
+                    {matchedAllergens.includes(ingredient) && " ⚠️"}
                   </span>
                 ))}
-
               </div>
-
             </div>
 
             {/* Allergy warning */}
             {isUnsafe ? (
               <div className="mt-7 rounded-2xl border border-red-200 bg-red-50 p-4">
-
                 <div className="flex gap-3">
-
-                  <AlertTriangle
-                    size={20}
-                    className="shrink-0 text-red-500"
-                  />
+                  <AlertTriangle size={20} className="shrink-0 text-red-500" />
 
                   <div>
                     <p className="text-sm font-bold text-red-800">
@@ -410,23 +376,14 @@ const FoodDetails = () => {
 
                     <p className="mt-1 text-xs leading-5 text-red-700">
                       This dish contains:{" "}
-                      <strong>
-                        {matchedAllergens.join(", ")}
-                      </strong>
-                      .
+                      <strong>{matchedAllergens.join(", ")}</strong>.
                     </p>
                   </div>
-
                 </div>
-
               </div>
             ) : (
               <div className="mt-7 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
-
-                <ShieldCheck
-                  size={20}
-                  className="text-green-600"
-                />
+                <ShieldCheck size={20} className="text-green-600" />
 
                 <div>
                   <p className="text-sm font-bold text-green-800">
@@ -437,18 +394,14 @@ const FoodDetails = () => {
                     Based on the ingredients provided by the restaurant.
                   </p>
                 </div>
-
               </div>
             )}
 
             {/* Quantity */}
             {!isUnsafe && (
               <div className="mt-8 flex items-center justify-between rounded-2xl border border-black/5 bg-white p-4">
-
                 <div>
-                  <p className="text-sm font-semibold">
-                    Quantity
-                  </p>
+                  <p className="text-sm font-semibold">Quantity</p>
 
                   <p className="mt-1 text-xs text-gray-400">
                     ₹{food.price} each
@@ -456,33 +409,22 @@ const FoodDetails = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-
                   <button
-                    onClick={() =>
-                      setQuantity((prev) =>
-                        Math.max(1, prev - 1)
-                      )
-                    }
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 transition hover:bg-gray-200"
                   >
                     <Minus size={17} />
                   </button>
 
-                  <span className="w-5 text-center font-bold">
-                    {quantity}
-                  </span>
+                  <span className="w-5 text-center font-bold">{quantity}</span>
 
                   <button
-                    onClick={() =>
-                      setQuantity((prev) => prev + 1)
-                    }
+                    onClick={() => setQuantity((prev) => prev + 1)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 transition hover:bg-gray-200"
                   >
                     <Plus size={17} />
                   </button>
-
                 </div>
-
               </div>
             )}
 
@@ -505,15 +447,115 @@ const FoodDetails = () => {
 
             {/* Safety note */}
             <p className="mt-4 text-center text-[11px] leading-5 text-gray-400">
-              Allergy information is provided by the restaurant.
-              If you have a serious allergy, please confirm with
-              restaurant staff before ordering.
+              Allergy information is provided by the restaurant. If you have a
+              serious allergy, please confirm with restaurant staff before
+              ordering.
             </p>
-
           </div>
-
         </div>
+        {/* Reviews */}
 
+        <section className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Customer Reviews
+              </h2>
+
+              <p className="text-sm text-gray-500">
+                What customers say about this food
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Write a Review
+            </button>
+
+            <div className="flex items-center gap-1 text-sm font-semibold">
+              ⭐ {food.rating}
+            </div>
+          </div>
+          {showReviewForm && (
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
+                {" "}
+                Write your review
+              </h3>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={reviewName}
+                onChange={(e) => setReviewName(e.target.value)}
+                className="mb-3 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-orange-500"
+              />
+
+              <textarea
+                placeholder="Share your experience..."
+                rows="4"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-orange-500"
+              />
+              <div className="mb-3">
+                <p className="mb-2 text-sm font-medium text-gray-700">
+                  Your rating
+                </p>
+
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className={`text-2xl transition ${
+                        star <= reviewRating
+                          ? "text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={handleSubmitReview}
+                className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+              >
+                Submit Review
+              </button>
+            </div>
+          )}
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="rounded-2xl border border-gray-200 bg-white p-4"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {review.userName}
+                    </h3>
+
+                    <div className="mt-1 text-sm">
+                      {"⭐".repeat(review.rating)}
+                    </div>
+                  </div>
+
+                  <span className="text-xs text-gray-400">{review.date}</span>
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-gray-600">
+                  {review.comment}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
