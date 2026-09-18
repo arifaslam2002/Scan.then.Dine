@@ -4,6 +4,8 @@ import Welcome from "./pages/customer/Welcome";
 import AllergySelection from "./pages/customer/AllergySelection";
 import Menu from "./pages/customer/Menu";
 import FoodDetails from "./pages/customer/FoodDetails";
+import Cart from "./pages/customer/Cart";
+import Checkout from "./pages/customer/Checkout";
 
 const App = () => {
   return (
@@ -16,6 +18,8 @@ const App = () => {
     path="/food/:id"
     element={<FoodDetails />}
   />
+  <Route path="/cart" element={<Cart />}/>
+  <Route path="/checkout" element={<Checkout />} />
       </Routes>
     </BrowserRouter>
   );
