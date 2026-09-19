@@ -1,16 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
-const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
-  const [name, setName] = useState(food.name);
-  const [category, setCategory] = useState(food.category);
-  const [price, setPrice] = useState(food.price);
-  const [description, setDescription] = useState(food.description);
-  const [ingredients, setIngredients] = useState(food.ingredients.join(", "));
+const EditFoodForm = ({ foodId, onFoodUpdated, onCancel }) => {
+  const [food, setFood] = useState(null);
+
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Grills");
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [ingredients, setIngredients] = useState("");
 
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(food.image);
-  const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch food
+  useEffect(() => {
+    const fetchFood = async () => {
+      try {
+        setLoading(true);
+
+        const response = await axios.get(
+          `http://localhost:3000/api/foods/${foodId}`,
+        );
+
+        const fetchedFood = response.data;
+
+        setFood(fetchedFood);
+
+        setName(fetchedFood.name);
+        setCategory(fetchedFood.category);
+        setPrice(fetchedFood.price);
+        setDescription(fetchedFood.description);
+        setIngredients(fetchedFood.ingredients.join(", "));
+
+        setImagePreview(fetchedFood.image);
+      } catch (error) {
+        console.error(error);
+
+        alert("Failed to load food");
+        onCancel();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (foodId) {
+      fetchFood();
+    }
+  }, [foodId]);
+
+  // Save changes
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -20,7 +62,7 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
 
       const formData = new FormData();
 
@@ -44,46 +86,76 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
       }
 
       const response = await axios.patch(
-        `http://localhost:3000/api/foods/${food._id}`,
+        `http://localhost:3000/api/foods/${foodId}`,
         formData,
       );
 
       onFoodUpdated(response.data.food);
-
-      alert("Food updated successfully");
     } catch (error) {
       console.error(error);
 
       alert(error.response?.data?.message || "Failed to update food");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6">
-      <h2 className="text-xl font-semibold mb-5">Edit Food</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+  // Loading
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 text-center">
+        <p className="text-gray-500">Loading food...</p>
+      </div>
+    );
+  }
+
+  // Food not found
+  if (!food) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 text-center">
+        <p className="text-gray-500">Food not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="w-full bg-white border border-gray-200 rounded-3xl p-6 shadow-sm"
+    >
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">Food Details</h2>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Update the details for this menu item.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Food Name */}
         <div>
-          <label className="block text-sm font-medium mb-2">Food Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Food Name
+          </label>
 
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium mb-2">Category</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Category
+          </label>
 
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
           >
             <option value="Grills">Grills</option>
             <option value="Burgers">Burgers</option>
@@ -95,19 +167,24 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
 
         {/* Price */}
         <div>
-          <label className="block text-sm font-medium mb-2">Price</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Price
+          </label>
 
           <input
             type="number"
+            min="1"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
           />
         </div>
 
         {/* Image */}
         <div>
-          <label className="block text-sm font-medium mb-2">Food Image</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Food Image
+          </label>
 
           <input
             type="file"
@@ -121,7 +198,7 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
                 setImagePreview(URL.createObjectURL(selectedImage));
               }
             }}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"
           />
 
           {imagePreview && (
@@ -129,7 +206,7 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
               <img
                 src={imagePreview}
                 alt="Food preview"
-                className="w-full h-48 object-cover rounded-2xl"
+                className="w-full h-40 object-cover rounded-2xl border border-gray-200"
               />
 
               {image && (
@@ -139,7 +216,7 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
                     setImage(null);
                     setImagePreview(food.image);
                   }}
-                  className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/70 text-white text-sm"
+                  className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/70 text-white text-sm hover:bg-black transition"
                 >
                   Remove
                 </button>
@@ -149,51 +226,57 @@ const EditFoodForm = ({ food, onFoodUpdated, onCancel }) => {
         </div>
 
         {/* Description */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2">Description</label>
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
 
           <textarea
-            rows="4"
+            rows="3"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-orange-500 resize-none"
           />
         </div>
 
         {/* Ingredients */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2">Ingredients</label>
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ingredients
+          </label>
 
           <input
             type="text"
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200"
-            placeholder="Chicken, Garlic, Lemon"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
           />
+
+          <p className="text-xs text-gray-500 mt-2">
+            Separate ingredients with commas.
+          </p>
         </div>
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-3 mt-6">
+      <div className="mt-6 flex justify-end gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition"
+          className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
         >
           Cancel
         </button>
 
         <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="px-5 py-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition disabled:opacity-50"
+          type="submit"
+          disabled={saving}
+          className="px-6 py-3 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition disabled:opacity-50"
         >
-          {loading ? "Saving..." : "Save Changes"}
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 

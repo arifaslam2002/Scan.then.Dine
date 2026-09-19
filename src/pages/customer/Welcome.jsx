@@ -1,9 +1,15 @@
 import { ArrowRight, QrCode, ShieldCheck, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 const Welcome = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
+  const tableNumber = searchParams.get("table") || "T-05";
+  useEffect(() => {
+  localStorage.setItem("tableNumber", tableNumber);
+}, [tableNumber]);
+console.log("QR Table:", tableNumber);
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       {/* Header */}
@@ -14,20 +20,20 @@ const Welcome = () => {
           </div>
 
           <span className="text-lg font-bold tracking-tight">
-            Scan<span className="text-orange-500">.</span>Then<span className="text-orange-500">.</span>Dine
+            Scan<span className="text-orange-500">.</span>Then
+            <span className="text-orange-500">.</span>Dine
           </span>
         </div>
 
         <div className="hidden items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-2 text-sm text-gray-600 shadow-sm sm:flex">
           <span className="h-2 w-2 rounded-full bg-green-500" />
-          Table T-05
+          {tableNumber}
         </div>
       </header>
 
       {/* Main */}
       <main className="mx-auto flex max-w-6xl items-center justify-center px-5 pb-12 pt-10 sm:px-8 lg:min-h-[calc(100vh-88px)] lg:pt-0">
         <div className="grid w-full items-center gap-12 lg:grid-cols-2">
-
           {/* Left */}
           <div>
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700">
@@ -59,9 +65,7 @@ const Welcome = () => {
                   Ordering from
                 </p>
 
-                <p className="mt-1 font-semibold">
-                  Table T-05
-                </p>
+                <p className="mt-1 font-semibold">{tableNumber}</p>
               </div>
 
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600">
@@ -75,7 +79,6 @@ const Welcome = () => {
               className="group mt-6 flex w-full max-w-md items-center justify-center gap-3 rounded-2xl bg-[#171717] px-6 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-black hover:shadow-xl"
             >
               Start Ordering
-
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-transform duration-200 group-hover:translate-x-1">
                 <ArrowRight size={17} />
               </span>
@@ -103,9 +106,7 @@ const Welcome = () => {
               <div className="absolute bottom-8 left-8 right-8 rounded-2xl border border-white/60 bg-white/90 p-4 shadow-xl backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Today's experience
-                    </p>
+                    <p className="text-xs text-gray-400">Today's experience</p>
 
                     <p className="mt-1 font-semibold">
                       Fresh food. Faster ordering.
@@ -119,7 +120,6 @@ const Welcome = () => {
               </div>
             </div>
           </div>
-
         </div>
       </main>
     </div>

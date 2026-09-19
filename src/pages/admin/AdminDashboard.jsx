@@ -1,16 +1,14 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, ChefHat, Utensils } from "lucide-react";
+import { LayoutDashboard, ChefHat, Utensils,Table2,} from "lucide-react";
 import { Link } from "react-router-dom";
-import EditFoodForm from "./EditFoodForm";
 import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [foods, setFoods] = useState([]);
   const [foodSearch, setFoodSearch] = useState("");
-  const [editingFood, setEditingFood] = useState(null);
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -89,6 +87,27 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(error);
       alert("Failed to update food availability");
+    }
+  };
+  const deleteFood = async (foodId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this food?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:3000/api/foods/${foodId}`);
+
+      setFoods((prevFoods) => prevFoods.filter((food) => food._id !== foodId));
+
+      alert("Food deleted successfully");
+    } catch (error) {
+      console.error(error);
+
+      alert(error.response?.data?.message || "Failed to delete food");
     }
   };
   const today = new Date().toDateString();
@@ -181,6 +200,13 @@ const AdminDashboard = () => {
             >
               <Utensils size={17} />
               Menu
+            </Link>
+            <Link
+              to="/admin/tables"
+              className="hidden items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex"
+            >
+             <Table2 size={17} />
+              Tables
             </Link>
           </div>
         </div>
@@ -382,24 +408,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-      {/* edit food */}
-      {editingFood && (
-        <section className="mb-8 mt-6">
-          <EditFoodForm
-            food={editingFood}
-            onFoodUpdated={(updatedFood) => {
-              setFoods((prevFoods) =>
-                prevFoods.map((food) =>
-                  food._id === updatedFood._id ? updatedFood : food,
-                ),
-              );
-
-              setEditingFood(null);
-            }}
-            onCancel={() => setEditingFood(null)}
-          />
-        </section>
-      )}
       {/* add new food */}
       <button
         onClick={() => navigate("/admin/foods/new")}
@@ -468,10 +476,16 @@ const AdminDashboard = () => {
                     {food.available ? "Make Unavailable" : "Make Available"}
                   </button>
                   <button
-                    onClick={() => setEditingFood(food)}
-                    className="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition"
+                    onClick={() => navigate(`/admin/foods/edit/${food._id}`)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => deleteFood(food._id)}
+                    className="px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition"
+                  >
+                    Delete
                   </button>
                 </div>
               </div>

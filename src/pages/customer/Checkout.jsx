@@ -7,10 +7,13 @@ const Checkout = () => {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [cart, setCart] = useState([]);
-
+  const [tableNumber, setTableNumber] = useState("");
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(savedCart);
+    const savedTableNumber = localStorage.getItem("tableNumber") || "T-05";
+
+    setTableNumber(savedTableNumber);
   }, []);
 
   const subtotal = cart.reduce(
@@ -200,7 +203,7 @@ const Checkout = () => {
                 {
                   customerName,
                   phone,
-                  tableNumber: "T-05",
+                  tableNumber,
 
                   items: cart.map((item) => ({
                     foodId: item._id,

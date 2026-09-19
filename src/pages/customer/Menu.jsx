@@ -33,7 +33,7 @@ const Menu = () => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
- 
+  const [tableNumber, setTableNumber] = useState("");
   useEffect(() => {
     const fetchFoods = async () => {
       try {
@@ -43,6 +43,9 @@ const Menu = () => {
 
         setFoods(response.data);
         setError("");
+        const savedTableNumber = localStorage.getItem("tableNumber") || "T-05";
+
+        setTableNumber(savedTableNumber);
       } catch (error) {
         console.error(error);
         setError("Failed to load foods");
@@ -127,6 +130,7 @@ const Menu = () => {
     setCart(updatedCart);
   };
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       {/* Header */}
@@ -143,24 +147,12 @@ const Menu = () => {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-2 text-xs font-medium sm:flex">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Table T-05
-              </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 rounded-full">
+              <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
 
-              <button
-                onClick={() => navigate("/cart")}
-                className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#171717] text-white shadow-lg"
-              >
-                <ShoppingBag size={19} />
-
-                {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              <span className="text-sm font-medium text-orange-700">
+                Table {tableNumber}
+              </span>
             </div>
           </div>
 

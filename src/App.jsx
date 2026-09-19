@@ -11,6 +11,8 @@ import OrderConfirmation from "./pages/customer/OrderConfirmation";
 import OrderTracking from "./pages/customer/OrderTracking";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AddFood from "./pages/admin/AddFood";
+import EditFood from "./pages/admin/EditFood";
+import Tables from "./pages/admin/Tables";
 
 const App = () => {
   return (
@@ -27,6 +29,8 @@ const App = () => {
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
         <Route path="/order/:id" element={<OrderTracking />} />
         <Route path="/admin/foods/new" element={<AddFood />} />
+        <Route path="/admin/foods/edit/:id" element={<EditFood />} />
+        <Route path="/admin/tables" element={<Tables />} />
       </Routes>
     </BrowserRouter>
   );
