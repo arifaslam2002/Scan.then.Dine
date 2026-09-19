@@ -216,11 +216,13 @@ const Checkout = () => {
 
               console.log(response.data);
 
-              alert("Order placed successfully!");
-
               localStorage.removeItem("cart");
 
-              navigate("/menu");
+              navigate("/order-confirmation", {
+                state: {
+                  order: response.data.order,
+                },
+              });
             } catch (error) {
               console.error(error);
 
