@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useMemo, useState,useEffect } from "react";
 import {
   Search,
   ShoppingBag,
@@ -104,6 +103,11 @@ const Menu = () => {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    setCart(savedCart);
+  }, []);
   const [allergies] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("customerAllergies")) || [];
@@ -134,15 +138,35 @@ const Menu = () => {
     return matchesCategory && matchesSearch;
   });
   const addToCart = (food) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === food.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === food.id ? { ...item, quantity: item.quantity + 1 } : item,
-        );
-      }
-      return [...prev, { ...food, quantity: 1 }];
-    });
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    const existingItem = existingCart.find((item) => item.id === food.id);
+
+    let updatedCart;
+
+    if (existingItem) {
+      updatedCart = existingCart.map((item) =>
+        item.id === food.id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item,
+      );
+    } else {
+      updatedCart = [
+        ...existingCart,
+        {
+          ...food,
+          quantity: 1,
+        },
+      ];
+    }
+
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+    // Update React state
+    setCart(updatedCart);
   };
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   return (
