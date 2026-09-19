@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -10,94 +11,6 @@ import {
   Star,
   AlertTriangle,
 } from "lucide-react";
-
-const foods = [
-  {
-    id: 1,
-    name: "Chicken Alfaham",
-    category: "Grills",
-    price: 280,
-    rating: 4.8,
-    reviews: 42,
-    ordered: 156,
-    image:
-      "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Juicy charcoal-grilled chicken marinated with aromatic spices, garlic and fresh lemon. Served hot with a smoky grilled flavor.",
-    ingredients: ["Chicken", "Spices", "Garlic", "Lemon"],
-  },
-  {
-    id: 2,
-    name: "Chicken Burger",
-    category: "Burgers",
-    price: 220,
-    rating: 4.7,
-    reviews: 86,
-    ordered: 243,
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Crispy chicken fillet layered with fresh lettuce, cheese and our signature sauce inside a soft toasted bun.",
-    ingredients: ["Chicken", "Wheat", "Egg", "Milk", "Cheese", "Lettuce"],
-  },
-  {
-    id: 3,
-    name: "Chicken Fried Rice",
-    category: "Rice",
-    price: 190,
-    rating: 4.6,
-    reviews: 64,
-    ordered: 198,
-    image:
-      "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Fragrant rice wok-tossed with tender chicken, vegetables, egg and a flavorful soy-based seasoning.",
-    ingredients: ["Rice", "Chicken", "Egg", "Soy", "Vegetables"],
-  },
-  {
-    id: 4,
-    name: "Tandoori Chicken",
-    category: "Grills",
-    price: 320,
-    rating: 4.9,
-    reviews: 108,
-    ordered: 287,
-    image:
-      "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Classic tandoori chicken marinated in yogurt and aromatic spices, then roasted for a delicious smoky finish.",
-    ingredients: ["Chicken", "Yogurt", "Spices", "Lemon"],
-  },
-  {
-    id: 5,
-    name: "Paneer Butter Masala",
-    category: "Curries",
-    price: 240,
-    rating: 4.7,
-    reviews: 51,
-    ordered: 132,
-    image:
-      "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Soft paneer cooked in a rich tomato and butter gravy with aromatic Indian spices.",
-    ingredients: ["Paneer", "Milk", "Butter", "Tomato", "Cashew"],
-  },
-  {
-    id: 6,
-    name: "Chocolate Milkshake",
-    category: "Drinks",
-    price: 150,
-    rating: 4.8,
-    reviews: 73,
-    ordered: 221,
-    image:
-      "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=1200&q=80",
-    description:
-      "Creamy chocolate milkshake blended with rich chocolate and chilled milk.",
-    ingredients: ["Milk", "Chocolate", "Sugar"],
-  },
-];
-
 const allergyMap = {
   peanuts: ["peanut", "peanuts"],
   "tree-nuts": ["almond", "cashew", "pistachio", "walnut", "nuts"],
@@ -113,12 +26,32 @@ const allergyMap = {
 const FoodDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const [food, setFood] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewName, setReviewName] = useState("");
   const [reviewComment, setReviewComment] = useState("");
+  useEffect(() => {
+    const fetchFood = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/api/foods/${id}`,
+        );
+
+        setFood(response.data);
+      } catch (error) {
+        console.error(error);
+        setError("Failed to load food");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFood();
+  }, [id]);
   const [reviews, setReviews] = useState([
     {
       id: 1,
@@ -142,8 +75,6 @@ const FoodDetails = () => {
       date: "Sep 15, 2026",
     },
   ]);
-  const food = foods.find((item) => item.id === Number(id));
-
   const allergies = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("customerAllergies")) || [];
@@ -158,6 +89,21 @@ const FoodDetails = () => {
       setReviews(JSON.parse(savedReviews));
     }
   }, [id]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading food...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        {error}
+      </div>
+    );
+  }
   if (!food) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f7f5]">
@@ -196,7 +142,7 @@ const FoodDetails = () => {
 
     if (existingItem) {
       updatedCart = existingCart.map((item) =>
-        item.id === food.id
+        item._id === food._id
           ? {
               ...item,
               quantity: item.quantity + quantity,
@@ -252,13 +198,13 @@ const FoodDetails = () => {
     setReviewComment("");
     setShowReviewForm(false);
   };
-const averageRating =
-  reviews.length > 0
-    ? (
-        reviews.reduce((sum, review) => sum + review.rating, 0) /
-        reviews.length
-      ).toFixed(1)
-    : "0.0";
+  const averageRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((sum, review) => sum + review.rating, 0) /
+          reviews.length
+        ).toFixed(1)
+      : "0.0";
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       {/* Header */}

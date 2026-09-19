@@ -14,7 +14,7 @@ const Cart = () => {
   const updateQuantity = (id, change) => {
     const updatedCart = cart
       .map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + change } : item,
+        item._id === id ? { ...item, quantity: item.quantity + change } : item,
       )
       .filter((item) => item.quantity > 0);
 
@@ -22,7 +22,7 @@ const Cart = () => {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
   const removeItem = (id) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
+    const updatedCart = cart.filter((item) => item._id !== id);
 
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
@@ -75,7 +75,7 @@ const Cart = () => {
           ) : (
             cart.map((item) => (
               <div
-                key={item.id}
+                key={item._id}
                 className="flex gap-4 rounded-3xl border border-black/5 bg-white p-4 shadow-sm"
               >
                 {/* Food Image */}
@@ -96,7 +96,7 @@ const Cart = () => {
                   {/* Quantity */}
                   <div className="mt-3 flex items-center gap-3">
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item._id, -1)}
                       className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 transition hover:bg-gray-200"
                     >
                       <Minus size={16} />
@@ -107,7 +107,7 @@ const Cart = () => {
                     </span>
 
                     <button
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item._id, 1)}
                       className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 transition hover:bg-gray-200"
                     >
                       <Plus size={16} />
@@ -119,7 +119,7 @@ const Cart = () => {
                 <div className="flex flex-col items-end justify-between">
                   <button
                     className="text-gray-400 transition hover:text-red-500"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item._id)}
                   >
                     <Trash2 size={18} />
                   </button>

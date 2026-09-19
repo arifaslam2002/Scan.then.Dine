@@ -1,4 +1,5 @@
-import { useMemo, useState,useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import axios from "axios";
 import {
   Search,
   ShoppingBag,
@@ -10,80 +11,6 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const foods = [
-  {
-    id: 1,
-    name: "Chicken Alfaham",
-    category: "Grills",
-    price: 280,
-    rating: 4.8,
-    reviews: 42,
-    ordered: 156,
-    image:
-      "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["chicken", "spices", "garlic", "lemon"],
-  },
-  {
-    id: 2,
-    name: "Chicken Burger",
-    category: "Burgers",
-    price: 220,
-    rating: 4.7,
-    reviews: 86,
-    ordered: 243,
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["chicken", "wheat", "egg", "milk", "cheese", "lettuce"],
-  },
-  {
-    id: 3,
-    name: "Chicken Fried Rice",
-    category: "Rice",
-    price: 190,
-    rating: 4.6,
-    reviews: 64,
-    ordered: 198,
-    image:
-      "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["rice", "chicken", "egg", "soy", "vegetables"],
-  },
-  {
-    id: 4,
-    name: "Tandoori Chicken",
-    category: "Grills",
-    price: 320,
-    rating: 4.9,
-    reviews: 108,
-    ordered: 287,
-    image:
-      "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["chicken", "yogurt", "spices", "lemon"],
-  },
-  {
-    id: 5,
-    name: "Paneer Butter Masala",
-    category: "Curries",
-    price: 240,
-    rating: 4.7,
-    reviews: 51,
-    ordered: 132,
-    image:
-      "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["paneer", "milk", "butter", "tomato", "cashew"],
-  },
-  {
-    id: 6,
-    name: "Chocolate Milkshake",
-    category: "Drinks",
-    price: 150,
-    rating: 4.8,
-    reviews: 73,
-    ordered: 221,
-    image:
-      "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=800&q=80",
-    ingredients: ["milk", "chocolate", "sugar"],
-  },
-];
 const categories = ["All", "Grills", "Burgers", "Rice", "Curries", "Drinks"];
 
 const allergyMap = {
@@ -103,6 +30,27 @@ const Menu = () => {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+  const fetchFoods = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/foods"
+      );
+       
+      setFoods(response.data);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to load foods");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchFoods();
+}, []);
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
@@ -127,7 +75,7 @@ const Menu = () => {
 
       return !unsafe;
     });
-  }, [allergies]);
+  }, [foods, allergies]);
   const filteredFoods = safeFoods.filter((food) => {
     const matchesCategory =
       activeCategory === "All" || food.category === activeCategory;
@@ -140,13 +88,13 @@ const Menu = () => {
   const addToCart = (food) => {
     const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-    const existingItem = existingCart.find((item) => item.id === food.id);
+    const existingItem = existingCart.find((item) => item._id === food._id);
 
     let updatedCart;
 
     if (existingItem) {
       updatedCart = existingCart.map((item) =>
-        item.id === food.id
+        item._id === food._id
           ? {
               ...item,
               quantity: item.quantity + 1,
@@ -296,13 +244,13 @@ const Menu = () => {
             </div>
 
             <div className="mt-4 flex gap-4 overflow-x-auto pb-3">
-              {safeFoods
+              {[...safeFoods]
                 .sort((a, b) => b.ordered - a.ordered)
                 .slice(0, 3)
                 .map((food) => (
                   <div
-                    key={food.id}
-                    onClick={() => navigate(`/food/${food.id}`)}
+                    key={food._id}
+                    onClick={() => navigate(`/food/${food._id}`)}
                     className="min-w-[270px] overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm"
                   >
                     <div className="relative">
@@ -386,7 +334,7 @@ const Menu = () => {
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filteredFoods.map((food) => (
                 <FoodCard
-                  key={food.id}
+                  key={food._id}
                   food={food}
                   onAdd={() => addToCart(food)}
                 />
@@ -429,7 +377,7 @@ const FoodCard = ({ food, onAdd }) => {
   const navigate = useNavigate();
   return (
     <article
-      onClick={() => navigate(`/food/${food.id}`)}
+      onClick={() => navigate(`/food/${food._id}`)}
       className="group cursor-pointer overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
       {/* Image */}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import axios from "axios";
 const Checkout = () => {
   const navigate = useNavigate();
 
@@ -178,7 +178,7 @@ const Checkout = () => {
         </div>
         {/* Place Order */}
         <button
-          onClick={() => {
+          onClick={async () => {
             if (!customerName.trim()) {
               alert("Please enter your name");
               return;
@@ -194,7 +194,38 @@ const Checkout = () => {
               return;
             }
 
-            alert("Order confirmation will be connected next!");
+            try {
+              const response = await axios.post(
+                "http://localhost:3000/api/orders",
+                {
+                  customerName,
+                  phone,
+                  tableNumber: "T-05",
+
+                  items: cart.map((item) => ({
+                    foodId: item._id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                  })),
+
+                  totalAmount: subtotal,
+                  paymentMethod: "counter",
+                },
+              );
+
+              console.log(response.data);
+
+              alert("Order placed successfully!");
+
+              localStorage.removeItem("cart");
+
+              navigate("/menu");
+            } catch (error) {
+              console.error(error);
+
+              alert("Failed to place order");
+            }
           }}
           className="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99]"
         >
