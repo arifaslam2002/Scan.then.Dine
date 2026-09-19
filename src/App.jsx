@@ -9,6 +9,8 @@ import Checkout from "./pages/customer/Checkout";
 import KitchenDashboard from "./pages/kitchen/KitchenDashboard";
 import OrderConfirmation from "./pages/customer/OrderConfirmation";
 import OrderTracking from "./pages/customer/OrderTracking";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AddFood from "./pages/admin/AddFood";
 
 const App = () => {
   return (
@@ -21,8 +23,10 @@ const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/kitchen" element={<KitchenDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
         <Route path="/order/:id" element={<OrderTracking />} />
+        <Route path="/admin/foods/new" element={<AddFood />} />
       </Routes>
     </BrowserRouter>
   );

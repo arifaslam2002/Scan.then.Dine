@@ -33,24 +33,34 @@ const Menu = () => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+ 
   useEffect(() => {
-  const fetchFoods = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:3000/api/foods"
-      );
-       
-      setFoods(response.data);
-    } catch (error) {
-      console.error(error);
-      setError("Failed to load foods");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchFoods = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/foods/available",
+        );
 
-  fetchFoods();
-}, []);
+        setFoods(response.data);
+        setError("");
+      } catch (error) {
+        console.error(error);
+        setError("Failed to load foods");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoods();
+
+    const interval = setInterval(() => {
+      fetchFoods();
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
 

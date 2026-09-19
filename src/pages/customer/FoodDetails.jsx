@@ -34,6 +34,7 @@ const FoodDetails = () => {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewName, setReviewName] = useState("");
   const [reviewComment, setReviewComment] = useState("");
+  const [reviews, setReviews] = useState("");
   useEffect(() => {
     const fetchFood = async () => {
       try {
@@ -42,6 +43,11 @@ const FoodDetails = () => {
         );
 
         setFood(response.data);
+        const response1 = await axios.get(
+          `http://localhost:3000/api/reviews/${id}`,
+        );
+
+        setReviews(response1.data);
       } catch (error) {
         console.error(error);
         setError("Failed to load food");
@@ -52,29 +58,7 @@ const FoodDetails = () => {
 
     fetchFood();
   }, [id]);
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      userName: "Arif",
-      rating: 5,
-      comment: "Really tasty and fresh!",
-      date: "Sep 18, 2026",
-    },
-    {
-      id: 2,
-      userName: "Abid",
-      rating: 4,
-      comment: "Really tasty and fresh!",
-      date: "Sep 16, 2026",
-    },
-    {
-      id: 3,
-      userName: "Ram",
-      rating: 3,
-      comment: "Really tasty and fresh!",
-      date: "Sep 15, 2026",
-    },
-  ]);
+
   const allergies = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("customerAllergies")) || [];
@@ -82,13 +66,7 @@ const FoodDetails = () => {
       return [];
     }
   }, []);
-  useEffect(() => {
-    const savedReviews = localStorage.getItem(`reviews-${id}`);
 
-    if (savedReviews) {
-      setReviews(JSON.parse(savedReviews));
-    }
-  }, [id]);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -164,7 +142,7 @@ const FoodDetails = () => {
     navigate("/menu");
   };
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!reviewName.trim()) {
       alert("Please enter your name");
       return;
@@ -174,29 +152,31 @@ const FoodDetails = () => {
       alert("Please select a rating");
       return;
     }
+
     if (!reviewComment.trim()) {
       alert("Please write a comment");
       return;
     }
-    const newReview = {
-      id: Date.now(),
-      userName: reviewName,
-      rating: reviewRating,
-      comment: reviewComment,
-      date: new Date().toLocaleDateString(),
-    };
-    setReviews((prevReviews) => {
-      const updatedReviews = [newReview, ...prevReviews];
 
-      localStorage.setItem(`reviews-${id}`, JSON.stringify(updatedReviews));
+    try {
+      const response = await axios.post("http://localhost:3000/api/reviews", {
+        foodId: id,
+        userName: reviewName,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
 
-      return updatedReviews;
-    });
+      setReviews((prevReviews) => [response.data.review, ...prevReviews]);
 
-    setReviewName("");
-    setReviewRating(0);
-    setReviewComment("");
-    setShowReviewForm(false);
+      setReviewName("");
+      setReviewRating(0);
+      setReviewComment("");
+      setShowReviewForm(false);
+    } catch (error) {
+      console.error(error);
+
+      alert(error.response?.data?.message || "Failed to submit review");
+    }
   };
   const averageRating =
     reviews.length > 0
