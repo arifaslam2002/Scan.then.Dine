@@ -199,6 +199,7 @@ const Checkout = () => {
 
             try {
               const response = await api.post("/orders", {
+                orderType: "dine-in",
                 customerName,
                 phone,
                 tableNumber,
