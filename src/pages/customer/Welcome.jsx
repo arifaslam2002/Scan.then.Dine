@@ -4,12 +4,17 @@ import { useEffect } from "react";
 const Welcome = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
-  const tableNumber = searchParams.get("table") || "T-05";
+  const isParcel = searchParams.get("type") === "parcel";
+  const tableNumber = searchParams.get("table");
   useEffect(() => {
-  localStorage.setItem("tableNumber", tableNumber);
-}, [tableNumber]);
-console.log("QR Table:", tableNumber);
+    if (isParcel) {
+      localStorage.setItem("orderType", "parcel");
+      localStorage.removeItem("tableNumber");
+    } else if (tableNumber) {
+      localStorage.setItem("orderType", "dine-in");
+      localStorage.setItem("tableNumber", tableNumber);
+    }
+  }, [isParcel, tableNumber]);
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       {/* Header */}
@@ -27,7 +32,7 @@ console.log("QR Table:", tableNumber);
 
         <div className="hidden items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-2 text-sm text-gray-600 shadow-sm sm:flex">
           <span className="h-2 w-2 rounded-full bg-green-500" />
-          {tableNumber}
+          {isParcel ? "Parcel Order" : tableNumber}
         </div>
       </header>
 
@@ -38,7 +43,9 @@ console.log("QR Table:", tableNumber);
           <div>
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700">
               <Sparkles size={16} />
-              Welcome to your table
+              {isParcel
+                ? "Welcome to takeaway ordering"
+                : "Welcome to your table"}
             </div>
 
             <h1 className="max-w-xl text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
@@ -50,8 +57,9 @@ console.log("QR Table:", tableNumber);
             </h1>
 
             <p className="mt-6 max-w-lg text-base leading-7 text-gray-500 sm:text-lg">
-              Browse the menu, customize your experience, and order directly
-              from your table — no waiting, no hassle.
+              {isParcel
+                ? "Browse the menu, customize your order, and place your takeaway order with ease."
+                : "Browse the menu, customize your experience, and order directly from your table — no waiting, no hassle."}
             </p>
 
             {/* Table Card */}
@@ -62,10 +70,12 @@ console.log("QR Table:", tableNumber);
 
               <div className="flex-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
-                  Ordering from
+                  {isParcel ? "Ordering type" : "Ordering from"}
                 </p>
 
-                <p className="mt-1 font-semibold">{tableNumber}</p>
+                <p className="mt-1 font-semibold">
+                  {isParcel ? "Parcel / Takeaway" : tableNumber}
+                </p>
               </div>
 
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600">
@@ -85,7 +95,9 @@ console.log("QR Table:", tableNumber);
             </button>
 
             <p className="mt-4 max-w-md text-center text-xs text-gray-400">
-              Your order will be linked to this table automatically.
+              {isParcel
+                ? "Your order will be prepared as a parcel for pickup."
+                : "Your order will be linked to this table automatically."}
             </p>
           </div>
 
