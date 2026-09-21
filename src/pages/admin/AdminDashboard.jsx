@@ -188,17 +188,25 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f5] p-6">
       <nav className="mb-8 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Scan.Then.Dine</h2>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 sm:py-4">
+          {/* Top Row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+                Scan.Then.Dine
+              </h2>
 
-            <p className="text-xs text-gray-500">Restaurant Management</p>
+              <p className="text-xs text-gray-500">Restaurant Management</p>
+            </div>
+
+            <LogoutButton />
           </div>
-          <LogoutButton />
-          <div className="flex items-center gap-2">
+
+          {/* Navigation */}
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/admin"
-              className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 sm:flex-none sm:px-4"
             >
               <LayoutDashboard size={17} />
               Admin
@@ -206,7 +214,7 @@ const AdminDashboard = () => {
 
             <Link
               to="/kitchen"
-              className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex-none sm:px-4"
             >
               <ChefHat size={17} />
               Kitchen
@@ -214,14 +222,15 @@ const AdminDashboard = () => {
 
             <Link
               to="/menu"
-              className="hidden items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex-none sm:px-4"
             >
               <Utensils size={17} />
               Menu
             </Link>
+
             <Link
               to="/admin/tables"
-              className="hidden items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex-none sm:px-4"
             >
               <Table2 size={17} />
               Tables
