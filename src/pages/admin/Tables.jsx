@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import { QRCodeCanvas } from "qrcode.react";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import socket from "../../services/socket";
 const Tables = () => {
   const navigate = useNavigate();
   const [tables, setTables] = useState([]);
@@ -13,8 +13,8 @@ const Tables = () => {
     const fetchTables = async () => {
       try {
         const [tableResponse, orderResponse] = await Promise.all([
-          axios.get("http://localhost:3000/api/tables"),
-          axios.get("http://localhost:3000/api/orders"),
+          api.get("/tables"),
+          api.get("/orders")
         ]);
 
         setTables(tableResponse.data);
@@ -27,6 +27,25 @@ const Tables = () => {
     };
 
     fetchTables();
+
+    const handleTableStatusUpdate = ({ tableNumber, status }) => {
+      setTables((prevTables) =>
+        prevTables.map((table) =>
+          table.tableNumber === tableNumber
+            ? {
+                ...table,
+                status,
+              }
+            : table,
+        ),
+      );
+    };
+
+    socket.on("tableStatusUpdated", handleTableStatusUpdate);
+
+    return () => {
+      socket.off("tableStatusUpdated", handleTableStatusUpdate);
+    };
   }, []);
   const downloadQR = (tableNumber) => {
     const canvas = document.getElementById(`qr-${tableNumber}`);

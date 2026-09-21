@@ -1,7 +1,7 @@
-import axios from "axios";
+import api from "../../services/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
+import socket from "../../services/socket";
 const OrderTracking = () => {
   const { id } = useParams();
 
@@ -12,9 +12,7 @@ const OrderTracking = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3000/api/orders/${id}`,
-        );
+        const response = await api.get(`/orders/${id}`);
 
         setOrder(response.data);
         setError("");
@@ -32,8 +30,18 @@ const OrderTracking = () => {
       fetchOrder();
     }, 10000);
 
+    const handleOrderStatusUpdate = (updatedOrder) => {
+      if (updatedOrder._id === id) {
+        setOrder(updatedOrder);
+      }
+    };
+
+    socket.on("orderStatusUpdated", handleOrderStatusUpdate);
+
     return () => {
       clearInterval(interval);
+
+      socket.off("orderStatusUpdated", handleOrderStatusUpdate);
     };
   }, [id]);
   const cancelOrder = async () => {
@@ -46,9 +54,7 @@ const OrderTracking = () => {
     }
 
     try {
-      const response = await axios.patch(
-        `http://localhost:3000/api/orders/${id}/cancel`,
-      );
+      const response = await api.patch(`/orders/${id}/cancel`);
 
       setOrder(response.data.order);
     } catch (error) {

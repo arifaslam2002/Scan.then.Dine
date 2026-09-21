@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 const Checkout = () => {
   const navigate = useNavigate();
 
@@ -198,24 +198,21 @@ const Checkout = () => {
             }
 
             try {
-              const response = await axios.post(
-                "http://localhost:3000/api/orders",
-                {
-                  customerName,
-                  phone,
-                  tableNumber,
+              const response = await api.post("/orders", {
+                customerName,
+                phone,
+                tableNumber,
 
-                  items: cart.map((item) => ({
-                    foodId: item._id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                  })),
+                items: cart.map((item) => ({
+                  foodId: item._id,
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                })),
 
-                  totalAmount: subtotal,
-                  paymentMethod: "counter",
-                },
-              );
+                totalAmount: subtotal,
+                paymentMethod: "counter",
+              });
 
               console.log(response.data);
 

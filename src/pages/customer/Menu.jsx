@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import {
   Search,
   ShoppingBag,
@@ -34,13 +34,11 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tableNumber, setTableNumber] = useState("");
+
   useEffect(() => {
     const fetchFoods = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/api/foods/available",
-        );
-
+        const response = await api.get("/foods/available");
         setFoods(response.data);
         setError("");
         const savedTableNumber = localStorage.getItem("tableNumber") || "T-05";

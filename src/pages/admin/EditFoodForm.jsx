@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 
 const EditFoodForm = ({ foodId, onFoodUpdated, onCancel }) => {
   const [food, setFood] = useState(null);
@@ -22,9 +22,7 @@ const EditFoodForm = ({ foodId, onFoodUpdated, onCancel }) => {
       try {
         setLoading(true);
 
-        const response = await axios.get(
-          `http://localhost:3000/api/foods/${foodId}`,
-        );
+        const response = await api.get(`/foods/${foodId}`);
 
         const fetchedFood = response.data;
 
@@ -85,10 +83,7 @@ const EditFoodForm = ({ foodId, onFoodUpdated, onCancel }) => {
         formData.append("image", image);
       }
 
-      const response = await axios.patch(
-        `http://localhost:3000/api/foods/${foodId}`,
-        formData,
-      );
+      const response = await api.patch(`/foods/${foodId}`, formData)
 
       onFoodUpdated(response.data.food);
     } catch (error) {

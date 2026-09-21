@@ -1,6 +1,7 @@
-import axios from "axios";
+import api from "../../services/api";
 import { useEffect, useState } from "react";
-
+import socket from "../../services/socket";
+import LogoutButton from "../../components/LogoutButton";
 const KitchenDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,7 @@ const KitchenDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/orders");
+        const response = await api.get("/orders")
 
         setOrders(response.data);
         setError("");
@@ -31,18 +32,43 @@ const KitchenDashboard = () => {
       fetchOrders();
     }, 10000);
 
+    // Existing order status event
+    const handleOrderStatusUpdate = (updatedOrder) => {
+      setOrders((prevOrders) => {
+        const orderExists = prevOrders.some(
+          (order) => order._id === updatedOrder._id,
+        );
+
+        if (orderExists) {
+          return prevOrders.map((order) =>
+            order._id === updatedOrder._id ? updatedOrder : order,
+          );
+        }
+
+        return [updatedOrder, ...prevOrders];
+      });
+    };
+
+    // New order event
+    const handleNewOrder = (newOrder) => {
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    };
+
+    socket.on("orderStatusUpdated", handleOrderStatusUpdate);
+
+    socket.on("newOrder", handleNewOrder);
+
     return () => {
       clearInterval(interval);
+
+      socket.off("orderStatusUpdated", handleOrderStatusUpdate);
+
+      socket.off("newOrder", handleNewOrder);
     };
   }, []);
   const updateStatus = async (orderId, status) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:3000/api/orders/${orderId}/status`,
-        {
-          status,
-        },
-      );
+      const response = await api.patch(`/orders/${orderId}/status`, { status })
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -83,7 +109,9 @@ const KitchenDashboard = () => {
           <p className="mt-2 text-sm text-gray-500">
             Manage incoming restaurant orders.
           </p>
+          <LogoutButton />
         </div>
+
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
           {["all", "pending", "confirmed", "preparing", "ready", "served"].map(
             (status) => {

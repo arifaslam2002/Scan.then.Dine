@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 
 const AddFoodForm = ({ onFoodAdded }) => {
   const [name, setName] = useState("");
@@ -40,10 +40,7 @@ const AddFoodForm = ({ onFoodAdded }) => {
       );
       formData.append("image", image);
 
-      const response = await axios.post(
-        "http://localhost:3000/api/foods",
-        formData,
-      );
+      const response = await api.post("/foods", formData)
 
       onFoodAdded(response.data.food);
 

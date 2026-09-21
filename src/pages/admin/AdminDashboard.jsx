@@ -1,8 +1,10 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, ChefHat, Utensils,Table2,} from "lucide-react";
+import { LayoutDashboard, ChefHat, Utensils, Table2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import socket from "../../services/socket";
+import LogoutButton from "../../components/LogoutButton";
+import api from "../../services/api";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -12,10 +14,16 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/orders");
-        setOrders(response.data);
-        const foodResponse = await axios.get("http://localhost:3000/api/foods");
-        setFoods(foodResponse.data);
+        const response = await api.get("/orders");
+
+        setOrders(
+          Array.isArray(response.data)
+            ? response.data
+            : response.data.orders || [],
+        );
+        const foodResponse = await api.get("/foods");
+
+        setFoods(Array.isArray(foodResponse.data) ? foodResponse.data : []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -28,9 +36,27 @@ const AdminDashboard = () => {
     const interval = setInterval(() => {
       fetchOrders();
     }, 10000);
+    const handleNewOrder = (newOrder) => {
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    };
 
+    const handleOrderStatusUpdate = (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order,
+        ),
+      );
+    };
+
+    socket.on("newOrder", handleNewOrder);
+
+    socket.on("orderStatusUpdated", handleOrderStatusUpdate);
     return () => {
       clearInterval(interval);
+
+      socket.off("newOrder", handleNewOrder);
+
+      socket.off("orderStatusUpdated", handleOrderStatusUpdate);
     };
   }, []);
 
@@ -53,12 +79,7 @@ const AdminDashboard = () => {
     .reduce((total, order) => total + order.totalAmount, 0);
   const updateOrderStatus = async (orderId, status) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:3000/api/orders/${orderId}/status`,
-        {
-          status,
-        },
-      );
+      const response = await api.patch(`/orders/${orderId}/status`, { status });
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -72,16 +93,13 @@ const AdminDashboard = () => {
   };
   const updateFoodAvailability = async (foodId, available) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:3000/api/foods/${foodId}/availability`,
-        {
-          available,
-        },
-      );
+      const response = await api.patch(`/foods/${foodId}/availability`, {
+        available,
+      });
 
       setFoods((prevFoods) =>
         prevFoods.map((food) =>
-          food._id === foodId ? response.data.food : food,
+          food._id === foodId ? response.data?.food || food : food,
         ),
       );
     } catch (error) {
@@ -99,7 +117,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:3000/api/foods/${foodId}`);
+      await api.delete(`/foods/${foodId}`);
 
       setFoods((prevFoods) => prevFoods.filter((food) => food._id !== foodId));
 
@@ -176,7 +194,7 @@ const AdminDashboard = () => {
 
             <p className="text-xs text-gray-500">Restaurant Management</p>
           </div>
-
+          <LogoutButton />
           <div className="flex items-center gap-2">
             <Link
               to="/admin"
@@ -205,7 +223,7 @@ const AdminDashboard = () => {
               to="/admin/tables"
               className="hidden items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex"
             >
-             <Table2 size={17} />
+              <Table2 size={17} />
               Tables
             </Link>
           </div>
