@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard, ChefHat, Utensils, Table2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  ChefHat,
+  Utensils,
+  Table2,
+  QrCode,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import socket from "../../services/socket";
@@ -234,6 +240,13 @@ const AdminDashboard = () => {
             >
               <Table2 size={17} />
               Tables
+            </Link>
+            <Link
+              to="/admin/parcel-qr"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex-none sm:px-4"
+            >
+              <QrCode size={17} />
+              Parcel QR
             </Link>
           </div>
         </div>

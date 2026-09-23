@@ -7,11 +7,34 @@ const AddFoodForm = ({ onFoodAdded }) => {
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState("");
+  const [addons, setAddons] = useState([]);
+  const [addonName, setAddonName] = useState("");
+  const [addonPrice, setAddonPrice] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const handleAddAddon = () => {
+    if (!addonName.trim() || !addonPrice) {
+      alert("Please enter add-on name and price");
+      return;
+    }
 
+    setAddons((prev) => [
+      ...prev,
+      {
+        name: addonName.trim(),
+        price: Number(addonPrice),
+      },
+    ]);
+
+    setAddonName("");
+    setAddonPrice("");
+  };
+
+  const handleRemoveAddon = (index) => {
+    setAddons((prev) => prev.filter((_, i) => i !== index));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,9 +61,10 @@ const AddFoodForm = ({ onFoodAdded }) => {
             .filter(Boolean),
         ),
       );
+      formData.append("addons", JSON.stringify(addons));
       formData.append("image", image);
 
-      const response = await api.post("/foods", formData)
+      const response = await api.post("/foods", formData);
 
       onFoodAdded(response.data.food);
 
@@ -49,6 +73,9 @@ const AddFoodForm = ({ onFoodAdded }) => {
       setPrice("");
       setDescription("");
       setIngredients("");
+      setAddons([]);
+      setAddonName("");
+      setAddonPrice("");
       setImage(null);
       setImagePreview("");
 
@@ -207,6 +234,68 @@ const AddFoodForm = ({ onFoodAdded }) => {
           <p className="text-xs text-gray-500 mt-1.5">
             Separate ingredients with commas.
           </p>
+        </div>
+        {/* Add-ons */}
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Add-ons
+          </label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={addonName}
+              onChange={(e) => setAddonName(e.target.value)}
+              placeholder="Extra Cheese"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
+            />
+
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                value={addonPrice}
+                onChange={(e) => setAddonPrice(e.target.value)}
+                placeholder="30"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
+              />
+
+              <button
+                type="button"
+                onClick={handleAddAddon}
+                className="px-4 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {addons.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {addons.map((addon, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {addon.name}
+                    </p>
+
+                    <p className="text-xs text-gray-500">₹{addon.price}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAddon(index)}
+                    className="text-xs font-medium text-red-500 hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

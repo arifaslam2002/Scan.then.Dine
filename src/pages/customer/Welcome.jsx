@@ -15,6 +15,14 @@ const Welcome = () => {
       localStorage.setItem("tableNumber", tableNumber);
     }
   }, [isParcel, tableNumber]);
+  const handleStartOrdering = () => {
+  if (isParcel) {
+    navigate("/allergies");
+    return;
+  }
+
+  navigate(`/guest-count?table=${tableNumber}`);
+};
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
       {/* Header */}
@@ -85,7 +93,7 @@ const Welcome = () => {
 
             {/* CTA */}
             <button
-              onClick={() => navigate("/allergies")}
+              onClick={handleStartOrdering}
               className="group mt-6 flex w-full max-w-md items-center justify-center gap-3 rounded-2xl bg-[#171717] px-6 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-black hover:shadow-xl"
             >
               Start Ordering

@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import socket from "./services/socket";
 import Welcome from "./pages/customer/Welcome";
 import AllergySelection from "./pages/customer/AllergySelection";
 import Menu from "./pages/customer/Menu";
@@ -15,6 +14,15 @@ import EditFood from "./pages/admin/EditFood";
 import Tables from "./pages/admin/Tables";
 import AdminLogin from "./pages/admin/AdminLogin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ParcelQR from "./pages/ParcelQR";
+import GuestCount from "./pages/customer/GuestCount";
+import ActiveOrder from "./pages/customer/ActiveOrder";
+import FinishDining from "./pages/customer/FinishDining";
+import FinalBill from "./pages/customer/FinalBill";
+import CounterDashboard from "./pages/counter/CounterDashboard";
+import KitchenLogin from "./pages/kitchen/KitchenLogin";
+import CounterLogin from "./pages/counter/CounterLogin";
+import ReviewOrder from "./pages/customer/ReviewOrder";
 const App = () => {
   return (
     <BrowserRouter>
@@ -29,7 +37,15 @@ const App = () => {
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
         <Route path="/order/:id" element={<OrderTracking />} />
         <Route path="/parcel" element={<Welcome />} />
+        <Route path="/guest-count" element={<GuestCount />} />
+        <Route path="/active-order" element={<ActiveOrder />} />
+        <Route path="/finish-dining" element={<FinishDining />} />
+        <Route path="/bill" element={<FinalBill />} />
+        <Route path="/counter" element={<CounterDashboard />} />
+        <Route path="/kitchen/login" element={<KitchenLogin />} />
+        <Route path="/review-order" element={<ReviewOrder />} />
 
+        <Route path="/counter/login" element={<CounterLogin />} />
         {/* Admin login */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<ProtectedRoute allowedRoles={["admin", "kitchen"]} />}>
@@ -41,6 +57,10 @@ const App = () => {
           <Route path="/admin/foods/new" element={<AddFood />} />
           <Route path="/admin/foods/edit/:id" element={<EditFood />} />
           <Route path="/admin/tables" element={<Tables />} />
+          <Route path="/admin/parcel-qr" element={<ParcelQR />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={["counter"]} />}>
+          <Route path="/counter" element={<CounterDashboard />} />
         </Route>
       </Routes>
     </BrowserRouter>

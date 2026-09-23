@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../services/api";
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -30,6 +30,8 @@ const FoodDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [selectedAddons, setSelectedAddons] = useState([]);
+  const [orderNote, setOrderNote] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewName, setReviewName] = useState("");
@@ -38,14 +40,10 @@ const FoodDetails = () => {
   useEffect(() => {
     const fetchFood = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3000/api/foods/${id}`,
-        );
+        const response = await api.get(`/foods/${id}`);
 
         setFood(response.data);
-        const response1 = await axios.get(
-          `http://localhost:3000/api/reviews/${id}`,
-        );
+        const response1 = await api.get(`/reviews/${id}`);
 
         setReviews(response1.data);
       } catch (error) {
@@ -109,18 +107,48 @@ const FoodDetails = () => {
 
   const isUnsafe = matchedAllergens.length > 0;
 
-  const total = food.price * quantity;
+  const addonsTotal = selectedAddons.reduce(
+    (sum, addon) => sum + addon.price,
+    0,
+  );
 
+  const total = (food.price + addonsTotal) * quantity;
+  const toggleAddon = (addon) => {
+    setSelectedAddons((prev) => {
+      const exists = prev.some((item) => item.name === addon.name);
+
+      if (exists) {
+        return prev.filter((item) => item.name !== addon.name);
+      }
+
+      return [...prev, addon];
+    });
+  };
   const addToCart = () => {
     const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-    const existingItem = existingCart.find((item) => item.id === food.id);
+    const cartItem = {
+      cartItemId: `${food._id}-${Date.now()}-${Math.random()}`,
+      ...food,
+      quantity,
+      addons: selectedAddons,
+      note: orderNote.trim(),
+    };
+
+    const existingItem = existingCart.find(
+      (item) =>
+        item._id === food._id &&
+        JSON.stringify(item.addons || []) === JSON.stringify(selectedAddons) &&
+        (item.note || "") === orderNote.trim(),
+    );
 
     let updatedCart;
 
     if (existingItem) {
       updatedCart = existingCart.map((item) =>
-        item._id === food._id
+        item._id === food._id &&
+        JSON.stringify(item.addons || []) === JSON.stringify(selectedAddons) &&
+        (item.note || "") === orderNote.trim()
           ? {
               ...item,
               quantity: item.quantity + quantity,
@@ -128,13 +156,7 @@ const FoodDetails = () => {
           : item,
       );
     } else {
-      updatedCart = [
-        ...existingCart,
-        {
-          ...food,
-          quantity,
-        },
-      ];
+      updatedCart = [...existingCart, cartItem];
     }
 
     localStorage.setItem("cart", JSON.stringify(updatedCart));
@@ -159,7 +181,7 @@ const FoodDetails = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/reviews", {
+      const response = await api.post("/reviews", {
         foodId: id,
         userName: reviewName,
         rating: reviewRating,
@@ -322,7 +344,84 @@ const FoodDetails = () => {
                 </div>
               </div>
             )}
+            {/* Add-ons */}
+            {!isUnsafe && food.addons?.length > 0 && (
+              <div className="mt-8">
+                <div>
+                  <h2 className="text-sm font-bold">Customize your order</h2>
 
+                  <p className="mt-1 text-xs text-gray-400">
+                    Add extras if you like.
+                  </p>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  {food.addons.map((addon) => {
+                    const isSelected = selectedAddons.some(
+                      (item) => item.name === addon.name,
+                    );
+
+                    return (
+                      <button
+                        key={addon.name}
+                        type="button"
+                        onClick={() => toggleAddon(addon)}
+                        className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left transition ${
+                          isSelected
+                            ? "border-orange-500 bg-orange-50"
+                            : "border-black/5 bg-white hover:border-orange-300"
+                        }`}
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">
+                            {addon.name}
+                          </p>
+
+                          <p className="mt-1 text-xs text-gray-400">
+                            +₹{addon.price}
+                          </p>
+                        </div>
+
+                        <div
+                          className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold ${
+                            isSelected
+                              ? "border-orange-500 bg-orange-500 text-white"
+                              : "border-gray-300 text-transparent"
+                          }`}
+                        >
+                          ✓
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {/* Special Note */}
+            {!isUnsafe && (
+              <div className="mt-6">
+                <label className="text-sm font-bold">
+                  Special instructions
+                </label>
+
+                <p className="mt-1 text-xs text-gray-400">
+                  Tell the kitchen anything important about your order.
+                </p>
+
+                <textarea
+                  value={orderNote}
+                  onChange={(e) => setOrderNote(e.target.value)}
+                  placeholder="Example: No onions, please"
+                  rows="3"
+                  maxLength={200}
+                  className="mt-3 w-full resize-none rounded-2xl border border-black/5 bg-white p-4 text-sm outline-none transition focus:border-orange-500"
+                />
+
+                <p className="mt-1 text-right text-[11px] text-gray-400">
+                  {orderNote.length}/200
+                </p>
+              </div>
+            )}
             {/* Quantity */}
             {!isUnsafe && (
               <div className="mt-8 flex items-center justify-between rounded-2xl border border-black/5 bg-white p-4">

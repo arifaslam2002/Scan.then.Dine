@@ -14,7 +14,7 @@ const Tables = () => {
       try {
         const [tableResponse, orderResponse] = await Promise.all([
           api.get("/tables"),
-          api.get("/orders")
+          api.get("/orders"),
         ]);
 
         setTables(tableResponse.data);
@@ -50,9 +50,12 @@ const Tables = () => {
   const downloadQR = (tableNumber) => {
     const canvas = document.getElementById(`qr-${tableNumber}`);
 
-    const pngUrl = canvas
-      .toDataURL("image/png")
-      .replace("image/png", "image/octet-stream");
+    if (!canvas) {
+      alert("QR code not found");
+      return;
+    }
+
+    const pngUrl = canvas.toDataURL("image/png");
 
     const downloadLink = document.createElement("a");
 
@@ -63,12 +66,22 @@ const Tables = () => {
     downloadLink.click();
     document.body.removeChild(downloadLink);
   };
-  const printQR = (tableNumber) => {
+  const printQR = (tableNumber,capacity) => {
     const canvas = document.getElementById(`qr-${tableNumber}`);
+
+    if (!canvas) {
+      alert("QR code not found");
+      return;
+    }
 
     const image = canvas.toDataURL("image/png");
 
     const printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+      alert("Please allow pop-ups to print the QR code.");
+      return;
+    }
 
     printWindow.document.write(`
     <html>
@@ -88,15 +101,19 @@ const Tables = () => {
         <div style="text-align:center;">
           <h1>${tableNumber}</h1>
 
+          <p style="font-size:18px;">
+            Capacity: ${capacity || "—"} people
+          </p>
+
           <img
             src="${image}"
             width="300"
             height="300"
           />
 
-<p style="font-size:18px; margin-top:16px;">
-  Scan to view menu & order
-</p>
+          <p style="font-size:18px; margin-top:16px;">
+            Scan to view menu & order
+          </p>
         </div>
       </body>
     </html>
@@ -105,6 +122,7 @@ const Tables = () => {
     printWindow.document.close();
 
     printWindow.onload = () => {
+      printWindow.focus();
       printWindow.print();
     };
   };
@@ -178,7 +196,7 @@ const Tables = () => {
                 </p>
                 <div className="p-3 bg-white border border-gray-100 rounded-2xl">
                   <QRCodeCanvas
-                    id={`qr-${table}`}
+                    id={`qr-${tableNumber}`}
                     value={url}
                     size={180}
                     level="H"
@@ -193,6 +211,12 @@ const Tables = () => {
                   <p className="text-xs text-gray-500 mt-1">
                     Table {tableNumber}
                   </p>
+                  <p className="mb-3 text-sm text-gray-500">
+                    Capacity:{" "}
+                    <span className="font-semibold text-gray-700">
+                      {table.capacity} people
+                    </span>
+                  </p>
                 </div>
 
                 <div className="w-full flex gap-2 mt-4">
@@ -205,7 +229,7 @@ const Tables = () => {
                   </button>
 
                   <button
-                    onClick={() => printQR(tableNumber)}
+                    onClick={() => printQR(tableNumber,table.capacity)}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
                   >
                     <Printer size={17} />

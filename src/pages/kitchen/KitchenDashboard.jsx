@@ -1,8 +1,11 @@
 import api from "../../services/api";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import socket from "../../services/socket";
 import LogoutButton from "../../components/LogoutButton";
 const KitchenDashboard = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,7 +17,7 @@ const KitchenDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get("/orders")
+        const response = await api.get("/orders");
 
         setOrders(response.data);
         setError("");
@@ -68,7 +71,7 @@ const KitchenDashboard = () => {
   }, []);
   const updateStatus = async (orderId, status) => {
     try {
-      const response = await api.patch(`/orders/${orderId}/status`, { status })
+      const response = await api.patch(`/orders/${orderId}/status`, { status });
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -99,6 +102,13 @@ const KitchenDashboard = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f5] p-6">
       <div className="mx-auto max-w-7xl">
+        <button
+          onClick={() => navigate("/admin")}
+          className="mb-5 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        >
+          <ArrowLeft size={18} />
+          Back to Admin
+        </button>
         <div className="mb-8">
           <p className="text-sm font-medium text-orange-500">Scan.Then.Dine</p>
 
@@ -186,12 +196,42 @@ const KitchenDashboard = () => {
                     <span className="font-medium">Customer:</span>{" "}
                     {order.customerName}
                   </p>
-
                   <p>
-                    <span className="font-medium">Table:</span>{" "}
-                    {order.tableNumber}
+                    <span className="font-medium">
+                      {order.orderType === "parcel" ? "Order Type:" : "Table:"}
+                    </span>{" "}
+                    {order.orderType === "parcel"
+                      ? "Parcel / Takeaway"
+                      : order.tableNumber}
                   </p>
 
+                  {order.orderType === "dine-in" && order.guestCount && (
+                    <p className="mt-1">
+                      <span className="font-medium">Guests:</span>{" "}
+                      {order.guestCount}
+                    </p>
+                  )}
+                  {order.sessionId && (
+                    <p className="mt-1 text-[11px] text-orange-600">
+                      Session: {order.sessionId}
+                    </p>
+                  )}
+                  {order.orderType === "dine-in" && order.guestCount && (
+                    <div className="mt-3 rounded-xl bg-orange-50 px-3 py-2">
+                      <p className="text-xs font-semibold text-orange-700">
+                        Dining Setup
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-orange-800">
+                        {order.guestCount}{" "}
+                        {order.guestCount === 1 ? "Guest" : "Guests"}
+                      </p>
+
+                      <p className="mt-1 text-xs text-orange-600">
+                        Prepare plates, cutlery & welcome drinks
+                      </p>
+                    </div>
+                  )}
                   <p>
                     <span className="font-medium">Phone:</span> {order.phone}
                   </p>
@@ -213,10 +253,40 @@ const KitchenDashboard = () => {
                         <p className="text-xs text-gray-400">
                           ₹{item.price} × {item.quantity}
                         </p>
+                        {item.addons?.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {item.addons.map((addon) => (
+                              <p
+                                key={addon.name}
+                                className="text-xs text-orange-600"
+                              >
+                                + {addon.name} — ₹{addon.price}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.note && (
+                          <div className="mt-2 rounded-lg bg-orange-50 px-2.5 py-2">
+                            <p className="text-[11px] font-semibold text-orange-700">
+                              Note
+                            </p>
+
+                            <p className="text-xs text-orange-600">
+                              {item.note}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <p className="text-sm font-semibold">
-                        ₹{item.price * item.quantity}
+                        ₹
+                        {(item.price +
+                          (item.addons || []).reduce(
+                            (sum, addon) => sum + addon.price,
+                            0,
+                          )) *
+                          item.quantity}
                       </p>
                     </div>
                   ))}

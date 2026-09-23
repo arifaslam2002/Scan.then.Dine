@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, Home } from "lucide-react";
-
 const OrderConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,13 +98,35 @@ const OrderConfirmation = () => {
             >
               Track Your Order
             </button>
-
             <button
               onClick={() => navigate("/menu")}
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
               <Home size={18} />
               Back to Menu
+            </button>
+            <button
+              onClick={() => navigate("/active-order")}
+              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              View My Orders
+            </button>
+            <button
+              onClick={() => {
+                const tableNumber = localStorage.getItem("tableNumber");
+                const orderType =
+                  localStorage.getItem("orderType") || "dine-in";
+
+                if (orderType === "parcel") {
+                  navigate("/menu");
+                  return;
+                }
+
+                navigate(`/menu?table=${tableNumber}`);
+              }}
+              className="w-full rounded-2xl bg-orange-500 px-5 py-4 font-semibold text-white transition hover:bg-orange-600"
+            >
+              Order More
             </button>
           </div>
         </div>
