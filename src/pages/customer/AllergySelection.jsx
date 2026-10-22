@@ -68,7 +68,9 @@ const AllergySelection = () => {
   const [selected, setSelected] = useState([]);
   const [noAllergies, setNoAllergies] = useState(false);
   const [tableNumber, setTableNumber] = useState(
-    localStorage.getItem("tableNumber") || "T-05",
+    localStorage.getItem("orderType") === "parcel"
+      ? "Parcel / Takeaway"
+      : localStorage.getItem("tableNumber") || "T-05",
   );
   const handleToggle = (id) => {
     setNoAllergies(false);

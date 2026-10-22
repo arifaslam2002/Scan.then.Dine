@@ -33,7 +33,11 @@ const Menu = () => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [tableNumber, setTableNumber] = useState("");
+  const [tableNumber, setTableNumber] = useState(
+    localStorage.getItem("orderType") === "parcel"
+      ? "Parcel / Takeaway"
+      : localStorage.getItem("tableNumber") || "T-05",
+  );
 
   useEffect(() => {
     const fetchFoods = async () => {

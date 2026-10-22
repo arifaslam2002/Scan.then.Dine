@@ -35,9 +35,6 @@ const FinalBill = () => {
 
           const response = await api.get(`/orders/${orderId}`);
           const order = response.data;
-
-          console.log("Parcel order loaded:", order);
-
           setParcelOrder(order);
           setOrders([order]);
 
