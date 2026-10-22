@@ -6,7 +6,7 @@ const Cart = () => {
   const navigate = useNavigate();
 
   const [cart, setCart] = useState([]);
-
+  const [proceeding, setProceeding] = useState(false);
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
@@ -36,6 +36,12 @@ const Cart = () => {
 
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+  const handleProceedToCheckout = () => {
+    if (proceeding) return;
+
+    setProceeding(true);
+    navigate("/checkout");
   };
   const getItemPrice = (item) => {
     const addonsTotal = (item.addons || []).reduce(
@@ -220,11 +226,12 @@ const Cart = () => {
         {/* Checkout Button */}
         {cart.length > 0 && (
           <button
-            onClick={() => navigate("/checkout")}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99]"
+            onClick={handleProceedToCheckout}
+            disabled={proceeding}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <ShoppingBag size={19} />
-            Proceed to Checkout
+            {proceeding ? "Opening Checkout..." : "Proceed to Checkout"}
           </button>
         )}
       </div>
