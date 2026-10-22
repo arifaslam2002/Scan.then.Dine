@@ -13,6 +13,7 @@ const Checkout = () => {
   );
   const [cart, setCart] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
+  const [placingOrder, setPlacingOrder] = useState(false);
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(savedCart);
@@ -197,8 +198,11 @@ const Checkout = () => {
           </div>
         </div>
         {/* Place Order */}
+
         <button
           onClick={async () => {
+            if (placingOrder) return;
+
             if (!customerName.trim()) {
               alert("Please enter your name");
               return;
@@ -214,15 +218,18 @@ const Checkout = () => {
               return;
             }
 
+            setPlacingOrder(true);
+
             try {
               const orderType = localStorage.getItem("orderType") || "dine-in";
+
               localStorage.setItem("customerName", customerName.trim());
               localStorage.setItem("customerPhone", phone.trim());
-              const activeOrderId = localStorage.getItem("activeOrderId");
+
               const response = await api.post("/orders", {
                 orderType,
-                customerName,
-                phone,
+                customerName: customerName.trim(),
+                phone: phone.trim(),
                 tableNumber: orderType === "dine-in" ? tableNumber : null,
                 guestCount: orderType === "dine-in" ? guestCount : null,
                 sessionId: orderType === "dine-in" ? sessionId : null,
@@ -234,15 +241,13 @@ const Checkout = () => {
                   addons: item.addons || [],
                   note: item.note || "",
                 })),
-
                 totalAmount: subtotal,
                 paymentMethod: "cash",
               });
 
-              console.log(response.data);
-
               localStorage.removeItem("cart");
               localStorage.setItem("activeOrderId", response.data.order._id);
+
               navigate("/order-confirmation", {
                 state: {
                   order: response.data.order,
@@ -250,13 +255,15 @@ const Checkout = () => {
               });
             } catch (error) {
               console.error(error);
-
-              alert("Failed to place order");
+              alert(error.response?.data?.message || "Failed to place order");
+            } finally {
+              setPlacingOrder(false);
             }
           }}
-          className="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99]"
+          disabled={placingOrder}
+          className="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Place Order • ₹{subtotal}
+          {placingOrder ? "Placing Order..." : `Place Order • ₹${subtotal}`}
         </button>
       </div>
     </div>
