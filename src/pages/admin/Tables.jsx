@@ -9,18 +9,40 @@ const Tables = () => {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const [tableResponse, orderResponse] = await Promise.all([
-          api.get("/tables"),
-          api.get("/orders"),
-        ]);
+        const [tableResponse, availabilityResponse, orderResponse] =
+          await Promise.all([
+            api.get("/tables"),
+            api.get("/tables/availability"),
+            api.get("/orders"),
+          ]);
 
-        setTables(tableResponse.data);
+        const availabilityMap = new Map(
+          availabilityResponse.data.map((table) => [table.tableNumber, table]),
+        );
+
+        const updatedTables = tableResponse.data.map((table) => {
+          const availability = availabilityMap.get(table.tableNumber);
+
+          return {
+            ...table,
+            occupiedSeats: availability?.occupiedSeats ?? 0,
+            availableSeats: availability?.availableSeats ?? table.capacity,
+            status: availability
+              ? availability.availableSeats === 0
+                ? "occupied"
+                : "available"
+              : table.status,
+          };
+        });
+
+        setTables(updatedTables);
         setOrders(orderResponse.data);
       } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch tables:", error);
       } finally {
         setLoading(false);
       }
@@ -28,15 +50,13 @@ const Tables = () => {
 
     fetchTables();
 
+    // Refresh seat availability for the counter
+    const interval = setInterval(fetchTables, 10000);
+
     const handleTableStatusUpdate = ({ tableNumber, status }) => {
       setTables((prevTables) =>
         prevTables.map((table) =>
-          table.tableNumber === tableNumber
-            ? {
-                ...table,
-                status,
-              }
-            : table,
+          table.tableNumber === tableNumber ? { ...table, status } : table,
         ),
       );
     };
@@ -44,9 +64,11 @@ const Tables = () => {
     socket.on("tableStatusUpdated", handleTableStatusUpdate);
 
     return () => {
+      clearInterval(interval);
       socket.off("tableStatusUpdated", handleTableStatusUpdate);
     };
   }, []);
+
   const downloadQR = (tableNumber) => {
     const canvas = document.getElementById(`qr-${tableNumber}`);
 
@@ -66,7 +88,7 @@ const Tables = () => {
     downloadLink.click();
     document.body.removeChild(downloadLink);
   };
-  const printQR = (tableNumber,capacity) => {
+  const printQR = (tableNumber, capacity) => {
     const canvas = document.getElementById(`qr-${tableNumber}`);
 
     if (!canvas) {
@@ -194,6 +216,28 @@ const Tables = () => {
                   {activeOrders.length}{" "}
                   {activeOrders.length === 1 ? "Active Order" : "Active Orders"}
                 </p>
+
+                <div className="mb-4 grid w-full grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-gray-50 p-2">
+                    <p className="text-xs text-gray-500">Capacity</p>
+                    <p className="mt-1 font-semibold">{table.capacity}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-red-50 p-2">
+                    <p className="text-xs text-red-600">Occupied</p>
+                    <p className="mt-1 font-semibold text-red-700">
+                      {table.occupiedSeats}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-green-50 p-2">
+                    <p className="text-xs text-green-600">Seats Left</p>
+                    <p className="mt-1 font-semibold text-green-700">
+                      {table.availableSeats}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="p-3 bg-white border border-gray-100 rounded-2xl">
                   <QRCodeCanvas
                     id={`qr-${tableNumber}`}
@@ -229,7 +273,7 @@ const Tables = () => {
                   </button>
 
                   <button
-                    onClick={() => printQR(tableNumber,table.capacity)}
+                    onClick={() => printQR(tableNumber, table.capacity)}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
                   >
                     <Printer size={17} />
