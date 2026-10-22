@@ -45,7 +45,10 @@ const Menu = () => {
         const response = await api.get("/foods/available");
         setFoods(response.data);
         setError("");
-        const savedTableNumber = localStorage.getItem("tableNumber") || "T-05";
+        const savedTableNumber =
+          localStorage.getItem("orderType") === "parcel"
+            ? "Parcel / Takeaway"
+            : localStorage.getItem("tableNumber") || "T-05";
 
         setTableNumber(savedTableNumber);
       } catch (error) {
@@ -153,7 +156,9 @@ const Menu = () => {
               <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
 
               <span className="text-sm font-medium text-orange-700">
-                Table {tableNumber}
+                {tableNumber === "Parcel / Takeaway"
+                  ? tableNumber
+                  : `Table ${tableNumber}`}
               </span>
             </div>
           </div>
