@@ -344,64 +344,65 @@ const FinalBill = () => {
         </div>
 
         {/* Payment */}
-        <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
+        {!waitingForCounter && !paymentConfirmed && (
+          <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
 
-          <div className="mt-4 space-y-3">
-            {paymentOptions.map((option) => {
-              const Icon = option.icon;
-              const selected = paymentMethod === option.id;
+            <div className="mt-4 space-y-3">
+              {paymentOptions.map((option) => {
+                const Icon = option.icon;
+                const selected = paymentMethod === option.id;
 
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => setPaymentMethod(option.id)}
-                  className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
-                    selected
-                      ? "border-orange-500 bg-orange-50"
-                      : "border-gray-200 bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => setPaymentMethod(option.id)}
+                    className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
                       selected
-                        ? "bg-orange-500 text-white"
-                        : "bg-gray-100 text-gray-500"
+                        ? "border-orange-500 bg-orange-50"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <Icon size={22} />
-                  </div>
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                        selected
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      <Icon size={22} />
+                    </div>
 
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      {option.label}
-                    </p>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        {option.label}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {option.description}
+                      </p>
+                    </div>
 
-                    <p className="text-xs text-gray-500">
-                      {option.description}
-                    </p>
-                  </div>
+                    <div
+                      className={`h-5 w-5 rounded-full border-2 ${
+                        selected
+                          ? "border-orange-500 bg-orange-500"
+                          : "border-gray-300"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
 
-                  <div
-                    className={`h-5 w-5 rounded-full border-2 ${
-                      selected
-                        ? "border-orange-500 bg-orange-500"
-                        : "border-gray-300"
-                    }`}
-                  />
-                </button>
-              );
-            })}
+            <button
+              onClick={handlePayment}
+              disabled={loading || !paymentMethod}
+              className="mt-4 w-full rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Sending Request..." : "Request Payment"}
+            </button>
           </div>
-
-          <button
-            onClick={handlePayment}
-            disabled={loading || !paymentMethod}
-            className="w-full rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "Sending Request..." : "Request Payment"}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
