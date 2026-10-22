@@ -266,6 +266,15 @@ const ActiveOrder = () => {
                 >
                   Track Order
                 </button>
+
+                {isParcel && (
+                  <button
+                    onClick={() => navigate("/bill")}
+                    className="mt-3 w-full rounded-2xl bg-gray-900 px-4 py-3 font-semibold text-white"
+                  >
+                    View Final Bill
+                  </button>
+                )}
               </div>
             ))}
           </div>
