@@ -297,13 +297,6 @@ const ActiveOrder = () => {
           Order More
         </button>
 
-        <button
-          onClick={() => navigate("/bill")}
-          className="mt-3 w-full rounded-2xl border border-orange-200 bg-white px-5 py-4 font-semibold text-orange-600 transition hover:bg-orange-50"
-        >
-          Get Bill
-        </button>
-
         {!isParcel && (
           <button
             onClick={() => navigate("/finish-dining")}
