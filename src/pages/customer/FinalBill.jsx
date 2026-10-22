@@ -28,13 +28,15 @@ const FinalBill = () => {
           const orderId = localStorage.getItem("activeOrderId");
 
           if (!orderId) {
+            alert("Parcel order not found");
             navigate("/");
             return;
           }
 
           const response = await api.get(`/orders/${orderId}`);
+          const order = response.data;
 
-          const order = response.data.order || response.data;
+          console.log("Parcel order loaded:", order);
 
           setParcelOrder(order);
           setOrders([order]);
