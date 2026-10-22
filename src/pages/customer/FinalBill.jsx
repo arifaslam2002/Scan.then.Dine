@@ -20,6 +20,7 @@ const FinalBill = () => {
   const [redirecting, setRedirecting] = useState(false);
   const orderType = localStorage.getItem("orderType") || "dine-in";
   const isParcel = orderType === "parcel";
+  const [waitingForCounter, setWaitingForCounter] = useState(false);
   useEffect(() => {
     const fetchBill = async () => {
       try {
@@ -177,6 +178,7 @@ const FinalBill = () => {
 
         setParcelOrder(response.data.order);
         setOrders([response.data.order]);
+        setWaitingForCounter(true);
 
         alert(
           "Payment request sent to the counter. Please wait for confirmation.",
@@ -197,6 +199,7 @@ const FinalBill = () => {
         );
 
         setSession(response.data.session);
+        setWaitingForCounter(true);
 
         alert(
           "Payment request sent to the counter. Please wait for confirmation.",
@@ -239,6 +242,26 @@ const FinalBill = () => {
             </p>
           </div>
         </div>
+
+        {waitingForCounter && !paymentConfirmed && (
+          <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-6 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+
+            <h2 className="mt-4 text-lg font-bold text-gray-900">
+              Waiting for Counter Confirmation
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-600">
+              Your payment request has been sent. Please wait while the counter
+              confirms your payment.
+            </p>
+
+            <p className="mt-3 text-xs text-gray-500">
+              Checking for confirmation automatically...
+            </p>
+          </div>
+        )}
+
         {paymentConfirmed && (
           <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-6 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
