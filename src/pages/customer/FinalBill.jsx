@@ -34,8 +34,18 @@ const FinalBill = () => {
 
           const response = await api.get(`/orders/${orderId}`);
 
-          setParcelOrder(response.data);
-          setOrders([response.data]);
+          const order = response.data.order || response.data;
+
+          setParcelOrder(order);
+          setOrders([order]);
+
+          if (order.paymentStatus === "pending") {
+            setWaitingForCounter(true);
+          }
+
+          if (order.paymentStatus === "paid") {
+            setPaymentConfirmed(true);
+          }
         } else {
           const sessionId = localStorage.getItem("sessionId");
 
@@ -68,10 +78,19 @@ const FinalBill = () => {
 
           const response = await api.get(`/orders/${orderId}`);
 
-          const order = response.data;
+          const order = response.data.order || response.data;
 
           setParcelOrder(order);
           setOrders([order]);
+
+          if (order.paymentStatus === "pending") {
+            setWaitingForCounter(true);
+          }
+
+          if (order.paymentStatus === "paid") {
+            setWaitingForCounter(false);
+            setPaymentConfirmed(true);
+          }
 
           if (order.paymentStatus === "paid") {
             setPaymentConfirmed(true);
