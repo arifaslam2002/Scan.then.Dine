@@ -41,6 +41,33 @@ const GuestCount = () => {
 
   const handleContinue = async () => {
     try {
+      const existingSessionId = localStorage.getItem("sessionId");
+
+      // Reuse an existing session if it belongs to this table.
+      if (
+        existingSessionId &&
+        localStorage.getItem("tableNumber") === tableNumber
+      ) {
+        try {
+          const existingResponse = await api.get(
+            `/dining-sessions/${existingSessionId}`,
+          );
+
+          if (existingResponse.data.session?.status === "active") {
+            localStorage.setItem(
+              "guestCount",
+              existingResponse.data.session.guestCount,
+            );
+            navigate(`/allergies?table=${tableNumber}`);
+            return;
+          }
+        } catch (error) {
+          console.log("Existing session could not be reused.");
+        }
+
+        localStorage.removeItem("sessionId");
+      }
+
       const response = await api.post("/dining-sessions", {
         tableNumber,
         guestCount,
@@ -50,6 +77,8 @@ const GuestCount = () => {
 
       localStorage.setItem("guestCount", guestCount);
       localStorage.setItem("sessionId", session.sessionId);
+      localStorage.setItem("tableNumber", tableNumber);
+      localStorage.setItem("orderType", "dine-in");
 
       navigate(`/allergies?table=${tableNumber}`);
     } catch (error) {
