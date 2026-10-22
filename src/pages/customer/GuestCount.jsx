@@ -9,7 +9,8 @@ const GuestCount = () => {
 
   const tableNumber = searchParams.get("table");
 
-  const [capacity, setCapacity] = useState(null);
+  const [capacity, setCapacity] = useState(0);
+  const [availableSeats, setAvailableSeats] = useState(0);
   const [guestCount, setGuestCount] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,9 +24,20 @@ const GuestCount = () => {
           return;
         }
 
-        const response = await api.get(`/tables/${tableNumber}`);
+        const response = await api.get("/tables/availability");
 
-        setCapacity(response.data.capacity);
+        const table = response.data.find(
+          (item) => item.tableNumber === tableNumber,
+        );
+
+        if (!table) {
+          setError("Table not found.");
+          return;
+        }
+
+        setCapacity(table.capacity);
+        setAvailableSeats(table.availableSeats);
+        setGuestCount(table.availableSeats > 0 ? 1 : 0);
       } catch (error) {
         console.error(error);
 
@@ -135,35 +147,40 @@ const GuestCount = () => {
               </p>
 
               <p className="mt-2 text-xs text-gray-400">
-                Maximum {capacity} people
+                {availableSeats} seats available out of {capacity}
               </p>
             </div>
 
             <div className="mt-6 grid grid-cols-4 gap-2">
-              {Array.from({ length: capacity }, (_, index) => index + 1).map(
-                (number) => (
-                  <button
-                    key={number}
-                    onClick={() => setGuestCount(number)}
-                    className={`rounded-xl py-3 text-sm font-semibold transition ${
-                      guestCount === number
-                        ? "bg-orange-500 text-white"
-                        : "border border-gray-200 bg-white text-gray-700 hover:border-orange-300"
-                    }`}
-                  >
-                    {number}
-                  </button>
-                ),
-              )}
+              {Array.from(
+                { length: availableSeats },
+                (_, index) => index + 1,
+              ).map((number) => (
+                <button
+                  key={number}
+                  onClick={() => setGuestCount(number)}
+                  className={`rounded-xl py-3 text-sm font-semibold transition ${
+                    guestCount === number
+                      ? "bg-orange-500 text-white"
+                      : "border border-gray-200 bg-white text-gray-700 hover:border-orange-300"
+                  }`}
+                >
+                  {number}
+                </button>
+              ))}
             </div>
           </div>
 
           <button
             onClick={handleContinue}
-            disabled={submitting}
+            disabled={submitting || availableSeats === 0 || guestCount === 0}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? "Starting Dining Session..." : "Continue"}
+            {submitting
+              ? "Starting Dining Session..."
+              : availableSeats === 0
+                ? "Table is Full"
+                : "Continue"}
             {!submitting && <ArrowRight size={19} />}
           </button>
         </div>
