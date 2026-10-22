@@ -13,6 +13,7 @@ const GuestCount = () => {
   const [guestCount, setGuestCount] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchTable = async () => {
@@ -40,34 +41,12 @@ const GuestCount = () => {
   }, [tableNumber]);
 
   const handleContinue = async () => {
+    // Prevent duplicate clicks
+    if (submitting) return;
+
+    setSubmitting(true);
+
     try {
-      const existingSessionId = localStorage.getItem("sessionId");
-
-      // Reuse an existing session if it belongs to this table.
-      if (
-        existingSessionId &&
-        localStorage.getItem("tableNumber") === tableNumber
-      ) {
-        try {
-          const existingResponse = await api.get(
-            `/dining-sessions/${existingSessionId}`,
-          );
-
-          if (existingResponse.data.session?.status === "active") {
-            localStorage.setItem(
-              "guestCount",
-              existingResponse.data.session.guestCount,
-            );
-            navigate(`/allergies?table=${tableNumber}`);
-            return;
-          }
-        } catch (error) {
-          console.log("Existing session could not be reused.");
-        }
-
-        localStorage.removeItem("sessionId");
-      }
-
       const response = await api.post("/dining-sessions", {
         tableNumber,
         guestCount,
@@ -85,6 +64,8 @@ const GuestCount = () => {
       console.error(error);
 
       alert(error.response?.data?.message || "Unable to start dining session");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -179,10 +160,11 @@ const GuestCount = () => {
 
           <button
             onClick={handleContinue}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-semibold text-white transition hover:bg-orange-600"
+            disabled={submitting}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Continue
-            <ArrowRight size={19} />
+            {submitting ? "Starting Dining Session..." : "Continue"}
+            {!submitting && <ArrowRight size={19} />}
           </button>
         </div>
       </div>
