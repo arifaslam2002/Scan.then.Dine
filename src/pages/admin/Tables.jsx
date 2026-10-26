@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import socket from "../../services/socket";
 const Tables = () => {
@@ -9,7 +9,10 @@ const Tables = () => {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [tableNumber, setTableNumber] = useState("");
+  const [capacity, setCapacity] = useState(4);
+  const [adding, setAdding] = useState(false);
   useEffect(() => {
     const fetchTables = async () => {
       try {
@@ -148,12 +151,47 @@ const Tables = () => {
       printWindow.print();
     };
   };
+  const handleAddTable = async (e) => {
+    e.preventDefault();
+
+    if (adding) return;
+
+    if (!tableNumber.trim() || Number(capacity) < 1) {
+      alert("Enter a valid table number and capacity.");
+      return;
+    }
+
+    setAdding(true);
+
+    try {
+      await api.post("/tables", {
+        tableNumber: tableNumber.trim(),
+        capacity: Number(capacity),
+      });
+
+      // Refresh the table list
+      const response = await api.get("/tables");
+      setTables(response.data);
+
+      setTableNumber("");
+      setCapacity(4);
+      setShowAddForm(false);
+
+      alert("Table added successfully!");
+    } catch (error) {
+      console.error("Failed to add table:", error);
+
+      alert(error.response?.data?.message || "Failed to add table.");
+    } finally {
+      setAdding(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm text-gray-500">Admin Dashboard</p>
 
@@ -162,19 +200,105 @@ const Tables = () => {
               </h1>
             </div>
 
-            <button
-              onClick={() => navigate("/admin")}
-              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition"
-            >
-              <ArrowLeft size={18} />
-              Back
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 font-medium text-white transition hover:bg-orange-600"
+              >
+                <Plus size={18} />
+                Add Table
+              </button>
+
+              <button
+                onClick={() => navigate("/admin")}
+                className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                <ArrowLeft size={18} />
+                Back
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-8">
+        {showAddForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Add New Table
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Enter the table details below.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddTable} className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Table Number
+                  </label>
+
+                  <input
+                    type="text"
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    placeholder="Example: T-06"
+                    required
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Seating Capacity
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    disabled={adding}
+                    className="flex-1 rounded-xl border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={adding}
+                    className="flex-1 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
+                  >
+                    {adding ? "Adding..." : "Save Table"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
             Restaurant Tables
