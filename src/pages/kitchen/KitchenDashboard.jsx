@@ -26,25 +26,45 @@ const STATUS = {
     label: "Pending",
     accent: "bg-amber-400",
     chip: "bg-amber-50 text-amber-700 ring-amber-200",
-    action: { to: "confirmed", label: "Confirm order", icon: Check, btn: "bg-blue-600 hover:bg-blue-700" },
+    action: {
+      to: "confirmed",
+      label: "Confirm order",
+      icon: Check,
+      btn: "bg-blue-600 hover:bg-blue-700",
+    },
   },
   confirmed: {
     label: "Confirmed",
     accent: "bg-blue-500",
     chip: "bg-blue-50 text-blue-700 ring-blue-200",
-    action: { to: "preparing", label: "Start preparing", icon: Flame, btn: "bg-orange-500 hover:bg-orange-600" },
+    action: {
+      to: "preparing",
+      label: "Start preparing",
+      icon: Flame,
+      btn: "bg-orange-500 hover:bg-orange-600",
+    },
   },
   preparing: {
     label: "Preparing",
     accent: "bg-orange-500",
     chip: "bg-orange-50 text-orange-700 ring-orange-200",
-    action: { to: "ready", label: "Mark ready", icon: BellRing, btn: "bg-emerald-600 hover:bg-emerald-700" },
+    action: {
+      to: "ready",
+      label: "Mark ready",
+      icon: BellRing,
+      btn: "bg-emerald-600 hover:bg-emerald-700",
+    },
   },
   ready: {
     label: "Ready",
     accent: "bg-violet-500",
     chip: "bg-violet-50 text-violet-700 ring-violet-200",
-    action: { to: "served", label: "Mark served", icon: CheckCheck, btn: "bg-gray-900 hover:bg-black" },
+    action: {
+      to: "served",
+      label: "Mark served",
+      icon: CheckCheck,
+      btn: "bg-gray-900 hover:bg-black",
+    },
   },
   served: {
     label: "Served",
@@ -62,7 +82,10 @@ const TABS = ["all", "pending", "confirmed", "preparing", "ready", "served"];
 
 const timeAgo = (date) => {
   if (!date) return "";
-  const mins = Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 60000));
+  const mins = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(date).getTime()) / 60000),
+  );
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins} min ago`;
   const hrs = Math.floor(mins / 60);
@@ -70,13 +93,22 @@ const timeAgo = (date) => {
 };
 
 const itemTotal = (item) =>
-  (item.price + (item.addons || []).reduce((sum, a) => sum + a.price, 0)) * item.quantity;
+  (item.price + (item.addons || []).reduce((sum, a) => sum + a.price, 0)) *
+  item.quantity;
 
 const KitchenDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  // true only when the admin dashboard linked here with state={{ fromAdmin: true }}
-  const fromAdmin = location.state?.fromAdmin === true;
+  // Show "back to admin" only when an admin page sent us here.
+  // Route state can be lost (redirects, route guards), so we also check a
+  // flag the admin pages set for this browser tab.
+  let flagged = false;
+  try {
+    flagged = sessionStorage.getItem("fromAdmin") === "1";
+  } catch {
+    /* storage unavailable */
+  }
+  const fromAdmin = location.state?.fromAdmin === true || flagged;
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +143,9 @@ const KitchenDashboard = () => {
       setOrders((prevOrders) => {
         const orderExists = prevOrders.some((o) => o._id === updatedOrder._id);
         if (orderExists) {
-          return prevOrders.map((o) => (o._id === updatedOrder._id ? updatedOrder : o));
+          return prevOrders.map((o) =>
+            o._id === updatedOrder._id ? updatedOrder : o,
+          );
         }
         return [updatedOrder, ...prevOrders];
       });
@@ -145,7 +179,9 @@ const KitchenDashboard = () => {
   };
 
   const countOf = (status) =>
-    status === "all" ? orders.length : orders.filter((o) => o.status === status).length;
+    status === "all"
+      ? orders.length
+      : orders.filter((o) => o.status === status).length;
 
   const newCount = countOf("pending");
   const cookingCount = countOf("preparing");
@@ -221,7 +257,9 @@ const KitchenDashboard = () => {
         {/* ---------- heading + quick counts ---------- */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Incoming orders</h2>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Incoming orders
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
               New orders appear here automatically.
             </p>
@@ -234,7 +272,9 @@ const KitchenDashboard = () => {
             </div>
             <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-2.5">
               <p className="text-xs font-medium text-orange-700">Cooking</p>
-              <p className="text-xl font-bold text-orange-800">{cookingCount}</p>
+              <p className="text-xl font-bold text-orange-800">
+                {cookingCount}
+              </p>
             </div>
           </div>
         </div>
@@ -256,7 +296,9 @@ const KitchenDashboard = () => {
                 {status === "all" ? "All" : STATUS[status].label}
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
-                    active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {countOf(status)}
@@ -318,7 +360,10 @@ const KitchenDashboard = () => {
                     <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                       <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
                         {isParcel ? (
-                          <ShoppingBag size={15} className="shrink-0 text-gray-400" />
+                          <ShoppingBag
+                            size={15}
+                            className="shrink-0 text-gray-400"
+                          />
                         ) : (
                           <Hash size={15} className="shrink-0 text-gray-400" />
                         )}
@@ -331,7 +376,8 @@ const KitchenDashboard = () => {
                         <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
                           <Users size={15} className="shrink-0 text-gray-400" />
                           <span className="font-semibold">
-                            {order.guestCount} {order.guestCount === 1 ? "guest" : "guests"}
+                            {order.guestCount}{" "}
+                            {order.guestCount === 1 ? "guest" : "guests"}
                           </span>
                         </div>
                       ) : (
@@ -351,8 +397,9 @@ const KitchenDashboard = () => {
 
                     {order.orderType === "dine-in" && order.guestCount && (
                       <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
-                        Set up {order.guestCount} {order.guestCount === 1 ? "place" : "places"}:
-                        plates, cutlery and welcome drinks.
+                        Set up {order.guestCount}{" "}
+                        {order.guestCount === 1 ? "place" : "places"}: plates,
+                        cutlery and welcome drinks.
                       </p>
                     )}
 
@@ -365,19 +412,29 @@ const KitchenDashboard = () => {
                     {/* items */}
                     <ul className="mt-5 divide-y divide-gray-100 border-t border-gray-100">
                       {order.items.map((item, index) => (
-                        <li key={index} className="flex items-start justify-between gap-3 py-3">
+                        <li
+                          key={index}
+                          className="flex items-start justify-between gap-3 py-3"
+                        >
                           <div className="flex min-w-0 gap-3">
                             <span className="flex h-7 min-w-7 items-center justify-center rounded-lg bg-gray-900 px-1.5 text-xs font-bold text-white">
                               {item.quantity}×
                             </span>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                              <p className="text-xs text-gray-400">₹{item.price} each</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {item.name}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                ₹{item.price} each
+                              </p>
 
                               {item.addons?.length > 0 && (
                                 <ul className="mt-1.5 space-y-0.5">
                                   {item.addons.map((addon) => (
-                                    <li key={addon.name} className="text-xs text-orange-600">
+                                    <li
+                                      key={addon.name}
+                                      className="text-xs text-orange-600"
+                                    >
                                       + {addon.name} (₹{addon.price})
                                     </li>
                                   ))}
@@ -386,14 +443,19 @@ const KitchenDashboard = () => {
 
                               {item.note && (
                                 <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
-                                  <StickyNote size={13} className="mt-0.5 shrink-0" />
+                                  <StickyNote
+                                    size={13}
+                                    className="mt-0.5 shrink-0"
+                                  />
                                   {item.note}
                                 </p>
                               )}
                             </div>
                           </div>
 
-                          <p className="shrink-0 text-sm font-semibold">₹{itemTotal(item)}</p>
+                          <p className="shrink-0 text-sm font-semibold">
+                            ₹{itemTotal(item)}
+                          </p>
                         </li>
                       ))}
                     </ul>
@@ -401,7 +463,9 @@ const KitchenDashboard = () => {
                     {/* total + action */}
                     <div className="mt-auto pt-4">
                       <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                        <span className="text-sm font-medium text-gray-500">Total</span>
+                        <span className="text-sm font-medium text-gray-500">
+                          Total
+                        </span>
                         <span className="text-xl font-bold text-orange-600">
                           ₹{order.totalAmount}
                         </span>

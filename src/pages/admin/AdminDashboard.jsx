@@ -5,18 +5,12 @@ import {
   Utensils,
   Table2,
   QrCode,
-  Plus,
-  Search,
   IndianRupee,
   ShoppingBag,
   Flame,
   CheckCircle2,
-  Pencil,
-  Trash2,
-  Eye,
-  EyeOff,
 } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Area,
   AreaChart,
@@ -132,14 +126,20 @@ const StatCard = ({ icon: Icon, label, value, hint, tone }) => (
 /* ---------- page ---------- */
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+
+  // lets the kitchen page know the admin came from here
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("fromAdmin", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
 
   const [orders, setOrders] = useState([]);
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [foodSearch, setFoodSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
 
   /* ----- data loading (same logic as before) ----- */
   useEffect(() => {
@@ -191,31 +191,6 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(error);
       alert("Failed to update order status");
-    }
-  };
-
-  const updateFoodAvailability = async (foodId, available) => {
-    try {
-      const response = await api.patch(`/foods/${foodId}/availability`, {
-        available,
-      });
-      setFoods((prev) =>
-        prev.map((f) => (f._id === foodId ? response.data?.food || f : f)),
-      );
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update food availability");
-    }
-  };
-
-  const deleteFood = async (foodId) => {
-    if (!window.confirm("Are you sure you want to delete this food?")) return;
-    try {
-      await api.delete(`/foods/${foodId}`);
-      setFoods((prev) => prev.filter((f) => f._id !== foodId));
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Failed to delete food");
     }
   };
 
@@ -290,24 +265,6 @@ const AdminDashboard = () => {
     [foods],
   );
 
-  const categories = useMemo(() => {
-    const counts = foods.reduce((acc, f) => {
-      acc[f.category] = (acc[f.category] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [foods]);
-
-  const availableFoods = foods.filter((f) => f.available).length;
-
-  const filteredFoods = foods.filter(
-    (f) =>
-      (categoryFilter === "All" || f.category === categoryFilter) &&
-      `${f.name} ${f.category}`
-        .toLowerCase()
-        .includes(foodSearch.toLowerCase()),
-  );
-
   /* ----- loading ----- */
   if (loading) {
     return (
@@ -342,6 +299,7 @@ const AdminDashboard = () => {
                 <Link
                   key={to}
                   to={to}
+                  state={{ fromAdmin: true }}
                   className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition ${
                     active
                       ? "bg-orange-500 text-white shadow-sm"
@@ -366,6 +324,7 @@ const AdminDashboard = () => {
               <Link
                 key={to}
                 to={to}
+                state={{ fromAdmin: true }}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
                   active
                     ? "bg-orange-500 text-white"
@@ -388,16 +347,9 @@ const AdminDashboard = () => {
               Dashboard
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Live view of your orders, sales and menu.
+              Live view of your orders and sales.
             </p>
           </div>
-          <button
-            onClick={() => navigate("/admin/foods/new")}
-            className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600"
-          >
-            <Plus size={16} />
-            Add new food
-          </button>
         </div>
 
         {/* ---------- KPI cards ---------- */}
@@ -639,24 +591,6 @@ const AdminDashboard = () => {
                 );
               })}
             </div>
-
-            <div className="mt-6 border-t border-gray-100 pt-5">
-              <p className="text-sm font-medium text-gray-700">
-                Menu availability
-              </p>
-              <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-red-100">
-                <div
-                  className="h-full bg-emerald-500"
-                  style={{
-                    width: `${foods.length ? (availableFoods / foods.length) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                {availableFoods} available · {foods.length - availableFoods}{" "}
-                hidden · {foods.length} total
-              </p>
-            </div>
           </Card>
         </div>
 
@@ -718,138 +652,6 @@ const AdminDashboard = () => {
                   </div>
                 );
               })}
-            </div>
-          )}
-        </Card>
-
-        {/* ---------- menu management ---------- */}
-        <Card
-          title="Menu"
-          subtitle={`${filteredFoods.length} of ${foods.length} items`}
-          action={
-            <button
-              onClick={() => navigate("/admin/foods/new")}
-              className="hidden items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:flex"
-            >
-              <Plus size={16} />
-              Add food
-            </button>
-          }
-        >
-          <div className="relative max-w-md">
-            <Search
-              size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search food or category…"
-              value={foodSearch}
-              onChange={(e) => setFoodSearch(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-orange-400 focus:bg-white"
-            />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["All", ...categories.map(([c]) => c)].map((c) => (
-              <button
-                key={c}
-                onClick={() => setCategoryFilter(c)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  categoryFilter === c
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {c}
-                {c !== "All" && (
-                  <span className="ml-1.5 opacity-60">
-                    {categories.find(([name]) => name === c)?.[1]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {filteredFoods.length === 0 ? (
-            <p className="py-12 text-center text-sm text-gray-400">
-              No food matches your search. Try a different word or category.
-            </p>
-          ) : (
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredFoods.map((food) => (
-                <article
-                  key={food._id}
-                  className="group overflow-hidden rounded-2xl border border-gray-200/70 bg-white transition hover:shadow-md"
-                >
-                  <div className="relative">
-                    <img
-                      src={food.image}
-                      alt={food.name}
-                      className={`h-44 w-full object-cover ${food.available ? "" : "grayscale"}`}
-                    />
-                    <span
-                      className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur ${
-                        food.available
-                          ? "bg-emerald-500/90 text-white"
-                          : "bg-gray-900/80 text-white"
-                      }`}
-                    >
-                      {food.available ? "Available" : "Hidden"}
-                    </span>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="truncate font-semibold">{food.name}</h3>
-                        <p className="text-sm text-gray-500">{food.category}</p>
-                      </div>
-                      {food.price != null && (
-                        <p className="font-bold text-orange-600">
-                          {money(food.price)}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          updateFoodAvailability(food._id, !food.available)
-                        }
-                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                          food.available
-                            ? "bg-red-50 text-red-600 hover:bg-red-100"
-                            : "bg-emerald-500 text-white hover:bg-emerald-600"
-                        }`}
-                      >
-                        {food.available ? (
-                          <EyeOff size={14} />
-                        ) : (
-                          <Eye size={14} />
-                        )}
-                        {food.available ? "Hide" : "Show"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          navigate(`/admin/foods/edit/${food._id}`)
-                        }
-                        aria-label={`Edit ${food.name}`}
-                        className="rounded-xl border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => deleteFood(food._id)}
-                        aria-label={`Delete ${food.name}`}
-                        className="rounded-xl bg-red-50 p-2 text-red-600 transition hover:bg-red-100"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
             </div>
           )}
         </Card>
