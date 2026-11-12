@@ -9,6 +9,8 @@ import {
   ShoppingBag,
   Flame,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -122,6 +124,318 @@ const StatCard = ({ icon: Icon, label, value, hint, tone }) => (
     {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
   </div>
 );
+
+/* ---------- revenue explorer (pick a day, month or year) ---------- */
+
+const pad = (n) => String(n).padStart(2, "0");
+const dateKey = (d) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const monthKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const hourLabel = (h) => `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
+
+const MODES = [
+  { id: "day", label: "Day" },
+  { id: "month", label: "Month" },
+  { id: "year", label: "Year" },
+];
+
+const RevenueTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-gray-900">{row.full || label}</p>
+      <p className="mt-0.5 text-gray-600">Revenue: {money(row.revenue)}</p>
+      <p className="text-gray-600">
+        {row.orders} {row.orders === 1 ? "order" : "orders"}
+      </p>
+    </div>
+  );
+};
+
+const RevenueExplorer = ({ orders }) => {
+  const now = new Date();
+  const [mode, setMode] = useState("month");
+  const [day, setDay] = useState(dateKey(now));
+  const [month, setMonth] = useState(monthKey(now));
+  const [year, setYear] = useState(now.getFullYear());
+
+  const years = useMemo(() => {
+    const first = orders.reduce((min, o) => {
+      const y = o.createdAt ? new Date(o.createdAt).getFullYear() : min;
+      return Math.min(min, y);
+    }, now.getFullYear());
+    return Array.from(
+      { length: now.getFullYear() - first + 1 },
+      (_, i) => now.getFullYear() - i,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
+
+  const { data, total, count, peak, periodLabel, peakTitle } = useMemo(() => {
+    const valid = orders.filter((o) => o.status !== "cancelled" && o.createdAt);
+    let buckets = [];
+    let inRange = [];
+    let bucketOf = () => 0;
+    let periodLabel = "";
+    let peakTitle = "";
+
+    if (mode === "day") {
+      const [y, m, d] = day.split("-").map(Number);
+      periodLabel = new Date(y, m - 1, d).toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      peakTitle = "Busiest hour";
+      buckets = Array.from({ length: 24 }, (_, h) => ({
+        label: hourLabel(h),
+        full: `${hourLabel(h)} – ${hourLabel((h + 1) % 24)}`,
+        revenue: 0,
+        orders: 0,
+      }));
+      inRange = valid.filter((o) => dateKey(new Date(o.createdAt)) === day);
+      bucketOf = (dt) => dt.getHours();
+    } else if (mode === "month") {
+      const [y, m] = month.split("-").map(Number);
+      const days = new Date(y, m, 0).getDate();
+      periodLabel = `${MONTHS[m - 1]} ${y}`;
+      peakTitle = "Best day";
+      buckets = Array.from({ length: days }, (_, i) => ({
+        label: String(i + 1),
+        full: `${i + 1} ${MONTHS[m - 1]} ${y}`,
+        revenue: 0,
+        orders: 0,
+      }));
+      inRange = valid.filter((o) => {
+        const dt = new Date(o.createdAt);
+        return dt.getFullYear() === y && dt.getMonth() === m - 1;
+      });
+      bucketOf = (dt) => dt.getDate() - 1;
+    } else {
+      periodLabel = String(year);
+      peakTitle = "Best month";
+      buckets = MONTHS.map((mn) => ({
+        label: mn,
+        full: `${mn} ${year}`,
+        revenue: 0,
+        orders: 0,
+      }));
+      inRange = valid.filter(
+        (o) => new Date(o.createdAt).getFullYear() === year,
+      );
+      bucketOf = (dt) => dt.getMonth();
+    }
+
+    inRange.forEach((o) => {
+      const b = buckets[bucketOf(new Date(o.createdAt))];
+      if (b) {
+        b.revenue += o.totalAmount || 0;
+        b.orders += 1;
+      }
+    });
+
+    const total = inRange.reduce((t, o) => t + (o.totalAmount || 0), 0);
+    const best = buckets.reduce(
+      (p, b) => (b.revenue > p.revenue ? b : p),
+      buckets[0],
+    );
+    return {
+      data: buckets,
+      total,
+      count: inRange.length,
+      peak: best && best.revenue > 0 ? best : null,
+      periodLabel,
+      peakTitle,
+    };
+  }, [orders, mode, day, month, year]);
+
+  const shift = (delta) => {
+    if (mode === "day") {
+      const [y, m, d] = day.split("-").map(Number);
+      setDay(dateKey(new Date(y, m - 1, d + delta)));
+    } else if (mode === "month") {
+      const [y, m] = month.split("-").map(Number);
+      setMonth(monthKey(new Date(y, m - 1 + delta, 1)));
+    } else {
+      setYear((y) => y + delta);
+    }
+  };
+
+  const inputClass =
+    "rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-orange-400";
+
+  return (
+    <Card
+      title="Revenue explorer"
+      subtitle="Pick a day, month or year to see what you earned (cancelled orders excluded)"
+    >
+      {/* controls */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-xl bg-gray-100 p-1">
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
+                mode === m.id
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => shift(-1)}
+            aria-label="Previous"
+            className="rounded-xl border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          {mode === "day" && (
+            <input
+              type="date"
+              value={day}
+              max={dateKey(now)}
+              onChange={(e) => e.target.value && setDay(e.target.value)}
+              className={inputClass}
+            />
+          )}
+          {mode === "month" && (
+            <input
+              type="month"
+              value={month}
+              max={monthKey(now)}
+              onChange={(e) => e.target.value && setMonth(e.target.value)}
+              className={inputClass}
+            />
+          )}
+          {mode === "year" && (
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className={inputClass}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            onClick={() => shift(1)}
+            aria-label="Next"
+            className="rounded-xl border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* summary */}
+      <div className="mt-5 grid gap-3 sm:grid-cols-4">
+        <div className="rounded-xl bg-orange-50 p-4 sm:col-span-2">
+          <p className="text-sm text-orange-700">Revenue · {periodLabel}</p>
+          <p className="mt-1 text-3xl font-bold tracking-tight text-orange-700">
+            {money(total)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-gray-50 p-4">
+          <p className="text-sm text-gray-500">Orders</p>
+          <p className="mt-1 text-2xl font-bold">{count}</p>
+          <p className="text-xs text-gray-500">
+            Avg {money(count ? Math.round(total / count) : 0)} per order
+          </p>
+        </div>
+        <div className="rounded-xl bg-gray-50 p-4">
+          <p className="text-sm text-gray-500">{peakTitle}</p>
+          <p className="mt-1 text-2xl font-bold">{peak ? peak.label : "—"}</p>
+          <p className="text-xs text-gray-500">
+            {peak ? money(peak.revenue) : "No sales yet"}
+          </p>
+        </div>
+      </div>
+
+      {/* chart */}
+      <div className="mt-6 h-72">
+        {count === 0 ? (
+          <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 text-sm text-gray-400">
+            No orders in this period. Try another {mode}.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#eee"
+              />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                interval={mode === "day" ? 2 : "preserveStartEnd"}
+                minTickGap={mode === "month" ? 6 : 4}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)}
+              />
+              <Tooltip
+                cursor={{ fill: "#fff7ed" }}
+                content={<RevenueTooltip />}
+              />
+              <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={36}>
+                {data.map((b, i) => (
+                  <Cell
+                    key={i}
+                    fill={
+                      peak && b.label === peak.label ? "#ea580c" : "#fdba74"
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+      <p className="mt-3 text-xs text-gray-400">
+        {mode === "day" && "Each bar is one hour of the day."}
+        {mode === "month" && "Each bar is one day of the month."}
+        {mode === "year" && "Each bar is one month of the year."} The darkest
+        bar is the best one.
+      </p>
+    </Card>
+  );
+};
 
 /* ---------- page ---------- */
 
@@ -383,6 +697,8 @@ const AdminDashboard = () => {
             tone="bg-emerald-50 text-emerald-600"
           />
         </div>
+
+        <RevenueExplorer orders={orders} />
 
         {/* ---------- charts row 1 ---------- */}
         <div className="grid gap-6 lg:grid-cols-3">
