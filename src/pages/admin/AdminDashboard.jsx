@@ -75,7 +75,7 @@ const STATUS = {
 const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/kitchen", label: "Kitchen", icon: ChefHat },
-  { to: "/menu", label: "Menu", icon: Utensils },
+  { to: "/admin/menu", label: "Menu", icon: Utensils },
   { to: "/admin/tables", label: "Tables", icon: Table2 },
   { to: "/admin/parcel-qr", label: "Parcel QR", icon: QrCode },
 ];
