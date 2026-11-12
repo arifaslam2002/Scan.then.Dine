@@ -15,26 +15,10 @@ import {
   CheckCheck,
   Inbox,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import socket from "../../services/socket";
 import LogoutButton from "../../components/LogoutButton";
-
-/* ---------- role check ----------
-   Back button is only for admins. Kitchen staff who log in directly never see it.
-   ASSUMPTION: your login saves the role in localStorage, either as
-   localStorage.role = "admin"  OR  localStorage.user = '{"role":"admin"}'.
-   Change this function to match how your app stores it (context, redux, etc.). */
-const getRole = () => {
-  try {
-    const direct = localStorage.getItem("role");
-    if (direct) return direct;
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    return user?.role || null;
-  } catch {
-    return null;
-  }
-};
 
 /* ---------- status config ---------- */
 const STATUS = {
@@ -114,7 +98,9 @@ const itemTotal = (item) =>
 
 const KitchenDashboard = () => {
   const navigate = useNavigate();
-  const isAdmin = getRole() === "admin";
+  const location = useLocation();
+  // true only when the admin dashboard linked here with state={{ fromAdmin: true }}
+  const fromAdmin = location.state?.fromAdmin === true;
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +214,7 @@ const KitchenDashboard = () => {
       <header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            {isAdmin && (
+            {fromAdmin && (
               <button
                 onClick={() => navigate("/admin")}
                 aria-label="Back to admin"
