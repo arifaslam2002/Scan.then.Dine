@@ -41,7 +41,6 @@ const App = () => {
         <Route path="/active-order" element={<ActiveOrder />} />
         <Route path="/finish-dining" element={<FinishDining />} />
         <Route path="/bill" element={<FinalBill />} />
-        <Route path="/counter" element={<CounterDashboard />} />
         <Route path="/kitchen/login" element={<KitchenLogin />} />
         <Route path="/review-order" element={<ReviewOrder />} />
 
