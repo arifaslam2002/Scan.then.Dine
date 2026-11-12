@@ -23,6 +23,7 @@ import CounterDashboard from "./pages/counter/CounterDashboard";
 import KitchenLogin from "./pages/kitchen/KitchenLogin";
 import CounterLogin from "./pages/counter/CounterLogin";
 import ReviewOrder from "./pages/customer/ReviewOrder";
+import AdminMenu from "./pages/admin/AdminMenu";
 const App = () => {
   return (
     <BrowserRouter>
@@ -57,6 +58,7 @@ const App = () => {
           <Route path="/admin/foods/edit/:id" element={<EditFood />} />
           <Route path="/admin/tables" element={<Tables />} />
           <Route path="/admin/parcel-qr" element={<ParcelQR />} />
+          <Route path="/admin/menu" element={<AdminMenu />} />
         </Route>
         <Route element={<ProtectedRoute allowedRoles={["counter"]} />}>
           <Route path="/counter" element={<CounterDashboard />} />
